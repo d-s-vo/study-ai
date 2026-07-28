@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+# pre-commit (КЛИЕНТСКИЕ репы, МОДУЛЬ M1/M6) — не пускает следы агентской разработки, СЕКРЕТЫ
+# и (опц.) ПДн в коммит.  ⇐ ИНВАРИАНТЫ №5,6,7. Подключается через core.hooksPath bare-репозитория
+# (ставит bootstrap.sh). bash 3.2 / macOS совместимо.
+set -u
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"      # .../githooks/client
+GITHOOKS_DIR="$(dirname "$HOOK_DIR")"                             # .../githooks
+ALLOW_ROOT_FILE="$GITHOOKS_DIR/allowpatterns-root.txt"           # плейсхолдеры для секрет-детектора
+# shellcheck source=../lib/scan.sh
+. "$GITHOOKS_DIR/lib/scan.sh"
+
+fail=0
+say() { printf '%s\n' "$*" >&2; }
+
+# secret_allowed <line-content> — 0 если строку разрешает allowpatterns-root.txt
+# (плейсхолдер/пример/инлайн-код, а не реальный секрет).
+secret_allowed() {
+    _sa_content="$1"
+    [ -s "$ALLOW_ROOT_FILE" ] || return 1
+    while IFS= read -r _sa_pat || [ -n "$_sa_pat" ]; do
+        case "$_sa_pat" in
+            ''|'#'*) continue ;;
+        esac
+        if printf '%s\n' "$_sa_content" | grep -qiE -- "$_sa_pat" 2>/dev/null; then
+            return 0
+        fi
+    done < "$ALLOW_ROOT_FILE"
+    return 1
+}
+
+# ---------------------------------------------------------------------------
+# 1. Запретные ПУТИ/ИМЕНА среди staged-файлов (артефакты агентской системы).
+# ---------------------------------------------------------------------------
+# 1a. Только НОВЫЕ файлы (diff-filter=A) с запретными именами.
+#     Правка существующих (например AGENTS.md заказчика) — разрешена.
+NEW_NAME_RE='(^|/)(CLAUDE\.md|AGENT[^/]*\.md|spec\.md|impl\.md|retro\.md|.*\.jsonl)$'
+added="$(git diff --cached --name-only --diff-filter=A 2>/dev/null)"
+while IFS= read -r f || [ -n "$f" ]; do
+    [ -z "$f" ] && continue
+    if printf '%s\n' "$f" | grep -qiE -- "$NEW_NAME_RE"; then
+        say "БЛОК: новый файл с запретным именем: $f"
+        say "      Файлы CLAUDE.md/AGENT*.md/spec.md/impl.md/retro.md/*.jsonl нельзя"
+        say "      ДОБАВЛЯТЬ в клиентскую репу. Правка существующего AGENTS.md — можно."
+        fail=1
+    fi
+done <<EOF
+$added
+EOF
+
+# 1b. Любые staged-файлы (add|modify) с запретными путями системы + .env.
+ANY_PATH_RE='(^|/)\.claude/|(^|/)\.ai[a-z]*|(^\.ai$)|(^ai/)|(/ai/context)'
+allstaged="$(git diff --cached --name-only 2>/dev/null)"
+while IFS= read -r f || [ -n "$f" ]; do
+    [ -z "$f" ] && continue
+    if printf '%s\n' "$f" | grep -qiE -- "$ANY_PATH_RE"; then
+        say "БЛОК: staged-файл в запретном пути системы: $f"
+        say "      Каталоги .claude/, .ai*, ai/ — артефакты агентской системы, им не место в клиентской репе."
+        fail=1
+    fi
+    # любой .env-файл по имени (.env / *.env / .env.<suffix>) блокируем.
+    # Исключение — примеры без секретов: *.example.
+    _bn="${f##*/}"
+    if printf '%s\n' "$_bn" | grep -qE '\.env$|\.env\.' \
+       && ! printf '%s\n' "$_bn" | grep -qE '\.example$'; then
+        say "БЛОК: staged .env-файл: $f"
+        say "      .env* с секретами нельзя коммитить. Пример без секретов — *.example."
+        fail=1
+    fi
+    # Скан самого имени файла по стоп-словарю (например claude-notes.py).
+    if ! scan_string "$f" > /dev/null 2>&1; then
+        say "БЛОК: имя staged-файла содержит стоп-слово: $f"
+        scan_string "$f" >&2
+        fail=1
+    fi
+done <<EOF
+$allstaged
+EOF
+
+# ---------------------------------------------------------------------------
+# 2. Скан ДОБАВЛЕННЫХ строк staged-диффа по стоп-словарю (вкл. ~wip~).  ⇐ ИНВАРИАНТ №6,7.
+# ---------------------------------------------------------------------------
+report="$(git diff --cached --no-color 2>/dev/null \
+            | grep -E '^\+' | grep -vE '^\+\+\+' | sed 's/^+//' \
+            | scan_stream)"
+if [ -n "$report" ]; then
+    say "БЛОК: в добавленных строках диффа найдены стоп-слова / маркер ~wip~:"
+    printf '%s\n' "$report" >&2
+    fail=1
+fi
+
+# ---------------------------------------------------------------------------
+# 3. СЕКРЕТЫ по содержимому добавленных строк.  ⇐ ИНВАРИАНТ №5 (переносимо, оставить).
+#    Приватные ключи, AWS/S3-ключи, hex-секреты 32+, PASSWORD=/SECRET_KEY=/TOKEN= с реальным
+#    значением (8+ непробельных). Плейсхолдеры (<...>, {{...}}, example, инлайн-код) гасит
+#    secret_allowed. Одиночный телефон/короткое значение — НЕ секрет.
+# ---------------------------------------------------------------------------
+SECRET_CONTENT_RE='BEGIN[[:alnum:] ]*PRIVATE KEY|(^|[^A-Za-z_])(PASSWORD|PASSWD|SECRET_KEY|SECRET|API_KEY|APIKEY|TOKEN|ACCESS_KEY|AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID)[[:space:]]*[=:][[:space:]]*[^[:space:]]{8,}|AKIA[0-9A-Z]{16}|aws_secret_access_key[[:space:]]*[=:]|[=:][[:space:]]*["'"'"'`]?[0-9a-fA-F]{32,}'
+
+added_content="$(git diff --cached --no-color 2>/dev/null \
+                   | grep -E '^\+' | grep -vE '^\+\+\+' | sed 's/^+//')"
+sec_hits="$(printf '%s\n' "$added_content" | grep -nE -- "$SECRET_CONTENT_RE" 2>/dev/null)"
+sec_real=""
+if [ -n "$sec_hits" ]; then
+    while IFS= read -r h || [ -n "$h" ]; do
+        [ -z "$h" ] && continue
+        content="${h#*:}"                 # отбросить "<lineno>:"
+        if secret_allowed "$content"; then
+            continue                      # документация/плейсхолдер — не секрет
+        fi
+        sec_real="${sec_real}${h}
+"
+    done <<EOF
+$sec_hits
+EOF
+fi
+if [ -n "$sec_real" ]; then
+    say "БЛОК: в добавленных строках найдены признаки СЕКРЕТОВ:"
+    printf '%s\n' "$sec_real" | while IFS= read -r h; do [ -n "$h" ] && say "    $h"; done
+    fail=1
+fi
+
+# ---------------------------------------------------------------------------
+# 4. ПДн-ДАМПЫ / фикстуры с РЕАЛЬНЫМИ чувствительными данными.  ⇐ ИНВАРИАНТ №5 (домен-специфично).
+#    ADAPT-БЛОК (Боевые креды (БД, S3/MinIO, API-токены, Cloudflare Tunnel) из .env — наружу не выносить и в тестах не использовать; тесты — на .env.testing с test_*-значениями.): по умолчанию ВЫКЛЮЧЕН — включите под юрисдикцию/домен
+#    проекта. Ниже — ОБРАЗЕЦ для РФ-мед-данных (patients/СНИЛС/ОМС) закомментирован: раскомментируйте
+#    и адаптируйте имена таблиц/форматы под свои чувствительные данные. Логика ловит только явные
+#    признаки ДАМПА (INSERT/COPY по чувствительным таблицам, либо 3+ идентификаторов), не одиночные
+#    значения (честная разработка с одним тестовым значением проходит).
+# ---------------------------------------------------------------------------
+# # ADAPT: users|recipes — имена чувствительных таблиц через | (напр. patients|users|visits).
+# DUMP_RE='(INSERT[[:space:]]+INTO[[:space:]][^;]*(users|recipes))|(COPY[[:space:]][^;]*(users|recipes)[^;]*FROM)'
+# if printf '%s\n' "$added_content" | grep -qiE -- "$DUMP_RE"; then
+#     say "БЛОК: похоже на ДАМП/фикстуру с ПДн (INSERT INTO/COPY по чувствительным таблицам)."
+#     say "      Реальные персональные данные не коммитятся. (Одиночные значения — не сюда.)"
+#     fail=1
+# fi
+# # ОБРАЗЕЦ РФ (СНИЛС XXX-XXX-XXX YY): 3+ в добавленных строках => дамп/фикстура.
+# snils_n="$(printf '%s\n' "$added_content" \
+#              | grep -oE '[0-9]{3}-[0-9]{3}-[0-9]{3}[[:space:]][0-9]{2}' 2>/dev/null | grep -c . )"
+# if [ "${snils_n:-0}" -ge 3 ]; then
+#     say "БЛОК: в добавленных строках $snils_n СНИЛС-паттернов (3+) — признак дампа/фикстуры с ПДн."
+#     fail=1
+# fi
+# # ОБРАЗЕЦ РФ (полис ОМС, 16 цифр): 3+ в добавленных строках => дамп/фикстура.
+# oms_n="$(printf '%s\n' "$added_content" \
+#            | grep -oE '(^|[^0-9])[0-9]{16}([^0-9]|$)' 2>/dev/null | grep -c . )"
+# if [ "${oms_n:-0}" -ge 3 ]; then
+#     say "БЛОК: в добавленных строках $oms_n 16-значных номеров (полисы ОМС, 3+) — признак дампа с ПДн."
+#     fail=1
+# fi
+
+if [ "$fail" -ne 0 ]; then
+    say ""
+    say "Коммит отклонён pre-commit хуком охранной обвязки."
+    say "Что делать: убрать перечисленные файлы/строки из индекса (git restore --staged),"
+    say "почистить контент, либо (осознанно, под ответственность человека) --no-verify."
+    exit 1
+fi
+exit 0

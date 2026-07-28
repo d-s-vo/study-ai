@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# pre-push (КЛИЕНТСКИЕ репы, МОДУЛЬ M1/M6) — жёсткий гейт.  ⇐ ИНВАРИАНТ №7. Пуш разрешён ТОЛЬКО если:
+#   1) ветка отсутствует в чёрном списке имён (FEAT-, ai-, claude, ...);
+#   2) существует <workspace>/.push-allow и содержит имя пушируемой ветки (строкой);
+#   3) ни один исходящий коммит диапазона (сообщение + дифф + АВТОР/КОММИТТЕР) не содержит стоп-слов.
+#
+# Git передаёт по stdin строки: <local ref> <local sha> <remote ref> <remote sha>
+# Аргументы: $1 = имя remote, $2 = url remote.
+set -u
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"      # .../githooks/client
+GITHOOKS_DIR="$(dirname "$HOOK_DIR")"                             # .../githooks
+WS_ROOT="$(dirname "$GITHOOKS_DIR")"                             # корень workspace
+. "$GITHOOKS_DIR/lib/scan.sh"
+
+PUSH_ALLOW="$WS_ROOT/.push-allow"
+ZERO="0000000000000000000000000000000000000000"
+# ADAPT: study-cbook-ai — имя внутреннего репо (чтобы его имя не утекло в ветку клиента).
+FORBIDDEN_BRANCH_RE='(feat-[0-9]|(^|/)ai[-_/]|claude|anthropic|study-cbook-ai|~wip~|(^|/)wip(-|/|$))'
+
+fail=0
+say() { printf '%s\n' "$*" >&2; }
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+    [ -z "${remote_ref:-}" ] && continue
+
+    # Имя пушируемой ветки из remote_ref (refs/heads/<branch>).
+    branch="${remote_ref#refs/heads/}"
+
+    # 1. Чёрный список имён веток.
+    if printf '%s\n' "$branch" | grep -qiE -- "$FORBIDDEN_BRANCH_RE"; then
+        say "БЛОК: имя ветки '$branch' попадает под запрет (feat-номер/ai/claude/wip...)."
+        fail=1
+        continue
+    fi
+
+    # 2. Файл-разрешение.
+    if [ ! -f "$PUSH_ALLOW" ]; then
+        say "БЛОК: файл разрешения $PUSH_ALLOW отсутствует. Пуш только через scripts/deliver.sh."
+        fail=1
+        continue
+    fi
+    if ! grep -qxF -- "$branch" "$PUSH_ALLOW"; then
+        say "БЛОК: ветка '$branch' не разрешена в $PUSH_ALLOW."
+        say "      Разрешение выдаёт только пользователь/deliver.sh (строкой на ветку)."
+        fail=1
+        continue
+    fi
+
+    # 3. Диапазон исходящих коммитов.
+    if [ "$local_sha" = "$ZERO" ]; then
+        continue   # удаление ветки — нечего сканировать
+    fi
+    if [ "$remote_sha" = "$ZERO" ]; then
+        range_args="$local_sha --not --remotes=origin"
+    else
+        range_args="$remote_sha..$local_sha"
+    fi
+
+    commits="$(git rev-list $range_args 2>/dev/null)"
+    while IFS= read -r c || [ -n "$c" ]; do
+        [ -z "$c" ] && continue
+        # 3a. Сообщение коммита.
+        m_report="$(git log -1 --format='%B' "$c" 2>/dev/null | scan_stream)"
+        if [ -n "$m_report" ]; then
+            say "БЛОК: коммит $c — стоп-слова в сообщении:"
+            printf '%s\n' "$m_report" >&2
+            fail=1
+        fi
+        # 3b. Добавленные строки диффа коммита.
+        d_report="$(git show --no-color --format= "$c" 2>/dev/null \
+                      | grep -E '^\+' | grep -vE '^\+\+\+' | sed 's/^+//' \
+                      | scan_stream)"
+        if [ -n "$d_report" ]; then
+            say "БЛОК: коммит $c — стоп-слова в добавленных строках диффа:"
+            printf '%s\n' "$d_report" >&2
+            fail=1
+        fi
+        # 3c. Имя/почта автора и коммиттера (след ИИ/агента в метаданных коммита).
+        a_report="$(git log -1 --format='%an%n%ae%n%cn%n%ce' "$c" 2>/dev/null | scan_stream)"
+        if [ -n "$a_report" ]; then
+            say "БЛОК: коммит $c — имя автора/коммиттера содержит след:"
+            printf '%s\n' "$a_report" >&2
+            fail=1
+        fi
+    done <<EOF
+$commits
+EOF
+done
+
+if [ "$fail" -ne 0 ]; then
+    say ""
+    say "Пуш отклонён pre-push хуком охранной обвязки."
+    exit 1
+fi
+exit 0

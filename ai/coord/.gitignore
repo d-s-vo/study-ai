@@ -1,0 +1,5 @@
+agents/*
+locks/*
+fetch-state.json
+!agents/.gitkeep
+!locks/.gitkeep

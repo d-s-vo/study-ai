@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# pre-commit (КОРНЕВОЙ репозиторий артефактов) — не пускает СЕКРЕТЫ и КОД КЛИЕНТСКИХ реп.
+# ⇐ ИНВАРИАНТ №5. Здесь артефакты агентской системы жить МОГУТ, а секреты и код заказчика — НЕТ.
+# Подключается через: git config core.hooksPath githooks/root (ставит bootstrap.sh).
+set -u
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+ALLOW_ROOT_FILE="$(dirname "$HOOK_DIR")/allowpatterns-root.txt"   # githooks/allowpatterns-root.txt
+say() { printf '%s\n' "$*" >&2; }
+fail=0
+
+# root_is_allowed <line-content> — 0 если строку разрешает allowpatterns-root.txt
+# (пример/документация/плейсхолдер, а не реальный секрет).
+root_is_allowed() {
+    _ra_content="$1"
+    [ -s "$ALLOW_ROOT_FILE" ] || return 1
+    while IFS= read -r _ra_pat || [ -n "$_ra_pat" ]; do
+        case "$_ra_pat" in
+            ''|'#'*) continue ;;
+        esac
+        if printf '%s\n' "$_ra_content" | grep -qiE -- "$_ra_pat" 2>/dev/null; then
+            return 0
+        fi
+    done < "$ALLOW_ROOT_FILE"
+    return 1
+}
+
+# ---------------------------------------------------------------------------
+# 1. Секреты и код клиентских реп по ИМЕНАМ/ПУТЯМ staged-файлов.
+# ---------------------------------------------------------------------------
+SECRET_NAME_RE='(^|/)([^/]*\.env|team\.env|id_[a-z0-9]+|[^/]*\.pem|[^/]*\.key)$|(^|/)(id_rsa|id_ed25519)'
+# ADAPT: cbook|prod — имена клиентских worktree-каталогов через | (из repos.conf).
+# Код клиентских реп (в .gitignore, но защита от git add -f):
+CLIENT_PATH_RE='^(cbook|prod)/|^tasks/|^\.repos/'
+
+allstaged="$(git diff --cached --name-only 2>/dev/null)"
+while IFS= read -r f || [ -n "$f" ]; do
+    [ -z "$f" ] && continue
+    if printf '%s\n' "$f" | grep -qiE -- "$SECRET_NAME_RE"; then
+        say "БЛОК: staged-файл похож на секрет: $f"
+        say "      (*.env / team.env / id_* / *.pem / *.key нельзя коммитить)"
+        fail=1
+    fi
+    if printf '%s\n' "$f" | grep -qE -- "$CLIENT_PATH_RE"; then
+        say "БЛОК: staged-файл принадлежит клиентской репе (git add -f?): $f"
+        say "      Код заказчика НИКОГДА не коммитится в репо артефактов."
+        fail=1
+    fi
+done <<EOF
+$allstaged
+EOF
+
+# ---------------------------------------------------------------------------
+# 2. Секреты по СОДЕРЖИМОМУ добавленных строк.
+# ---------------------------------------------------------------------------
+# «Похоже на реальное значение»: после =/: минимум 8 непробельных символов (отсекает короткие).
+# Плейсхолдеры (<...>, {{...}}, «...», replace-me, example), строки-примеры (❌/✅) и инлайн-код
+# в backticks гасятся через allowpatterns-root.txt (root_is_allowed ниже).
+SECRET_CONTENT_RE='BEGIN[[:alnum:] ]*PRIVATE KEY|(^|[^A-Za-z_])(PASSWORD|PASSWD|SECRET_KEY|SECRET|API_KEY|TOKEN|AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID)[[:space:]]*[=:][[:space:]]*[^[:space:]]{8,}|AKIA[0-9A-Z]{16}|aws_secret_access_key[[:space:]]*[=:]'
+
+added_content="$(git diff --cached --no-color 2>/dev/null \
+                   | grep -E '^\+' | grep -vE '^\+\+\+' | sed 's/^+//')"
+hits="$(printf '%s\n' "$added_content" | grep -nE -- "$SECRET_CONTENT_RE" 2>/dev/null)"
+real_hits=""
+if [ -n "$hits" ]; then
+    while IFS= read -r h || [ -n "$h" ]; do
+        [ -z "$h" ] && continue
+        content="${h#*:}"                 # отбросить "<lineno>:"
+        if root_is_allowed "$content"; then
+            continue                      # это документация/плейсхолдер — не секрет
+        fi
+        real_hits="${real_hits}${h}
+"
+    done <<EOF
+$hits
+EOF
+fi
+if [ -n "$real_hits" ]; then
+    say "БЛОК: в добавленных строках найдены признаки секретов:"
+    printf '%s\n' "$real_hits" | while IFS= read -r h; do [ -n "$h" ] && say "    $h"; done
+    fail=1
+fi
+
+if [ "$fail" -ne 0 ]; then
+    say ""
+    say "Коммит в репо артефактов отклонён root pre-commit хуком (секреты/код заказчика)."
+    exit 1
+fi
+exit 0

@@ -1,0 +1,63 @@
+{
+  "_note": "ШАБЛОН. Абсолютные пути к хукам ГЕНЕРИРУЕТ scripts/bootstrap.sh из корня workspace — не хардкодить вручную. /Users/dmitry/server/sites/study-cbook-ai bootstrap заменяет реальным абсолютным путём и пишет результат в .claude/settings.json. Этот файл защищён guard-write.sh от правки агентом; первичную настройку делает человек/bootstrap.",
+  "permissions": {
+    "deny": [
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(git stash:*)"
+    ],
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git add:*)",
+      "Bash(git restore:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git switch:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git rev-list:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "/Users/dmitry/server/sites/study-cbook-ai/githooks/claude-pretool.sh" }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "/Users/dmitry/server/sites/study-cbook-ai/githooks/guard-write.sh" }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "/Users/dmitry/server/sites/study-cbook-ai/githooks/coord-session-start.sh" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          { "type": "command", "command": "/Users/dmitry/server/sites/study-cbook-ai/githooks/coord-heartbeat.sh" }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          { "type": "command", "command": "/Users/dmitry/server/sites/study-cbook-ai/githooks/coord-session-end.sh" }
+        ]
+      }
+    ]
+  }
+}
