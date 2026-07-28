@@ -24,13 +24,13 @@
 | **Одну нетривиальную фичу** (2+ файла/пакета, новый контракт/схема, новый компонент, >30 мин) | [`guides/feature-workflow.md`](guides/feature-workflow.md) | Specs-First (≥2 фич → спеки на ВСЕ ДО кода) · worktree через `./scripts/task.sh new <slug>` + Step-0 sync · реализация снизу-вверх · §8 гигиена |
 | **Фича с архитектурным решением** (decision-ADR: ОДНА фича + одна карточка `adr/NNN`) | [`guides/feature-workflow.md`](guides/feature-workflow.md) + мини-шаг ADR (§4.5) | decision-ADR = одна карточка `adr/NNN-slug.md` (в `ai/`, НЕ в клиентском коде) · ≠ ADR-инициатива (десятки фич → `adr-execution.md`) · номер: `coord.sh book --adr` или следующий свободный · статус Принят→Реализован в §10 |
 | **Крупный блок / целый ADR** (десятки фич), ты — оркестратор | [`guides/adr-execution.md`](guides/adr-execution.md) (слой НАД feature-workflow) | Закоммить подготовленный ADR ДО делегирования · specs-first гейт фазы · живой документ (статус+журнал+keystone) = часть DoD · каждую фичу → субагенту · **это НЕ decision-ADR одной фичи** |
-| **Серверная фича** (Laravel / слои: миграция · Eloquent · Domain/Application · контроллер · Inertia) | [`guides/stack-specifics.md`](guides/stack-specifics.md) §Backend-специфика + `feature-workflow.md` | Framework-first (проверь, есть ли готовое в Laravel/пакете); инварианты слоёв (Domain не знает Infrastructure; тонкие контроллеры; доступ к БД через репозитории; авторизация через Policies) — см. stack-specifics |
-| **Клиентская фича** (Inertia/Vue: страница · компонент · composable/store · типы) | [`guides/stack-specifics.md`](guides/stack-specifics.md) §Frontend-специфика + `feature-workflow.md` | Types-first (0 `any`/`as` в новом коде); данные — через props Inertia / слой-прокси, не прямой fetch; Filament Resource без бизнес-логики — см. stack-specifics |
+| **Серверная фича** (Laravel / слои: миграция · модель · Repository · DTO · Task · FormRequest · Controller · Resolver · Inertia) | [`guides/stack-specifics.md`](guides/stack-specifics.md) §Backend-специфика + `feature-workflow.md` | Framework-first (проверь, есть ли готовое в Laravel/пакете); строгие инварианты (Eloquent/`DB` — только в `app/Data/Repositories/*`, enforced PHPStan L10; поток Controller→Task→Repository→DTO→Resolver; наружу только DTO; авторизация через Policies) — см. stack-specifics |
+| **Клиентская фича** (Inertia/Vue: страница · компонент · composable/store · типы) | [`guides/stack-specifics.md`](guides/stack-specifics.md) §Frontend-специфика + `feature-workflow.md` | Types-first (0 `any`/`as`; TS strict; DTO-типы — автоген `artisan typescript:transform`); в props — только DTO Inertia, не прямой fetch; стили — Tailwind; Filament 5 Resource без бизнес-логики — см. stack-specifics |
 | **Поиск причины бага / дебаг** (тест упал · данные пропали · рендер пуст) | [`guides/debugging.md`](guides/debugging.md) | Repro → trace → binary search по стыкам → root-cause-fix → regression-тест · сверься с `process-metrics/known-flakes.md` ДО диагностики |
 | **Живая приёмка / проверить X живьём** (curl · браузер · e2e) | [`guides/live-acceptance.md`](guides/live-acceptance.md) | Зелёные тесты ≠ работает: прогони реальный сценарий · свой код — на изолированном стенде (даже соло) · часть DoD |
 | **Ретро процесса при закрытии инициативы** | [`guides/process-retro.md`](guides/process-retro.md) | Разбор процесса (не продукта): что стоило дорого, что переделали |
 | **Trivial-fix** (1-2 файла, <50 LOC, не миграция/контракт/keystone) | `feature-workflow.md` §Trivial-fix shortcut | **Без FEAT-NNN директории!** Одна строка в `devlog/YYYY-MM-DD.md` · §8 гигиена всё равно действует |
-| **Поднять систему / e2e / проверить** | `ops/local-setup.md` + [`guides/live-acceptance.md`](guides/live-acceptance.md) | `Laravel app :80 (Sail APP_PORT), Vite :5173, PostgreSQL :5432, Redis :6379, Mailpit :8025; Filament — /admin` — см. ops/local-setup |
+| **Поднять систему / e2e / проверить** | `ops/local-setup.md` + [`guides/live-acceptance.md`](guides/live-acceptance.md) | `Laravel app :80 (Sail APP_PORT), Vite :5173, MySQL 8 :3306, Redis :6379, Mailpit :8025; Filament — /admin` — см. ops/local-setup |
 | **Работа над САМОЙ системой** (coord-скрипты, гайды, инфраструктура агентов — артефакты вне клиентских реп) | [`devlog/features/README.md`](devlog/features/README.md) §Маппинг | Брони `coord.sh book` НЕ создаются · FEAT-номера резервируются диапазоном в таблице маппинга · при крупной инициативе → [`guides/adr-execution.md`](guides/adr-execution.md) |
 | **Параллельная работа при живых соседях** (брони, изоляция окружений, гейты) | [`guides/coordination.md`](guides/coordination.md) | Присутствие + брони FEAT/ADR (`coord.sh`) · окружение изолируй вручную (эфемерная БД Sail / `.env.testing`, свой порт) · тяжёлые гейты сериализуй (`gate.sh`) |
 | **Research / спайк / PoC** (изучение библиотеки, эмпирическая проверка гипотезы — НЕ фича) | [`research/README.md`](research/README.md) | Не ADR и не фича · привело к решению → ADR; превратилось в реализацию → `devlog/features/FEAT-NNN-*/` |
@@ -70,29 +70,27 @@
 ---
 ## 1. Концепция
 
-cbook — кулинарная книга (cookbook): веб-приложение для ведения и организации рецептов. Пользователь заводит рецепты (ингредиенты, шаги приготовления, изображения), группирует их и находит по каталогу. Аудитория — домашние кулинары, ведущие личную коллекцию рецептов. Продукт существует как рабочее приложение на Nuxt 4, и ближайшая крупная инициатива — миграция на Laravel 11 + Filament + Inertia/Vue со слоистой архитектурой (см. `memory.md` и ADR по стеку/миграции).
+cbook — кулинарная книга (cookbook): веб-приложение для ведения и организации рецептов. Пользователь заводит рецепты (ингредиенты, шаги приготовления, изображения) и находит их по каталогу. Аудитория — домашние кулинары, ведущие личную коллекцию рецептов. Продукт существует как рабочее приложение на **Nuxt 4 (Prisma + PostgreSQL/Neon)** — это **исходное состояние миграции**; **north star проекта** — миграция на enterprise-стек **Laravel 12 + Filament 5 + Inertia/Vue** в **строгой слоистой архитектуре** (поток Request→Controller→Task→Repository→DTO→Resolver→Inertia). См. `memory.md` (ведущий контекст + 5 STRICT RULES) и ADR-002/003/006.
 
 ### Ключевые сущности
 
-Доменная модель на момент инициализации (уточняется по мере миграции):
+Доменная модель по ТЗ заказчика (`steps` — JSON-массив строк внутри Recipe; `ingredients` — отдельная таблица `hasMany`):
 
-| Сущность | Смысл | Где живёт (слой) |
+| Сущность | Поля (ТЗ) | Где живёт |
 |----------|-------|--------------------------|
-| Recipe (Рецепт) | Рецепт: название, описание, изображение, время приготовления, порции | `Domain` (сущность/VO) + Eloquent-модель в `Infrastructure` |
-| Ingredient (Ингредиент) | Ингредиент рецепта с количеством/единицей измерения | `Domain` + Eloquent |
-| Step (Шаг) | Шаг приготовления (порядок + текст) | `Domain` + Eloquent |
-| Category (Категория) | Группировка/каталог рецептов | `Domain` + Eloquent |
-| User (Пользователь) | Владелец рецептов; аутентификация (Laravel auth) | `Infrastructure` (Laravel) + Policies |
+| Recipe (Рецепт) | id, title, description, cooking_time (int), servings (int), difficulty (Enum `low\|medium\|high`), **steps (JSON-массив строк)**, created_at, updated_at | Eloquent-модель `app/Models/Recipe` (доступ — только из Repository) |
+| Ingredient (Ингредиент) | id, recipe_id (FK→Recipe, **cascade delete**), name, quantity (float), unit (string) | Eloquent-модель `app/Models/Ingredient`, связь `hasMany` от Recipe |
+| User (Пользователь) | Владелец рецептов; аутентификация (Laravel auth) | `app/Models/User` + Policies |
 
-> Таблица — ориентир от текущего Nuxt/Prisma-кода; при миграции сущности переносятся в слоистую модель Laravel и фиксируются здесь по факту.
+> `steps` не имеет собственного id/ЖЦ — это JSON-колонка Recipe. `ingredients` — отдельная таблица (`hasMany`, каскадное удаление по recipe_id). Категории/Step как отдельные сущности в ТЗ **не заданы** — при появлении фиксировать здесь по факту.
 
-### Принципы системы
+### Принципы системы (5 STRICT RULES ТЗ + сквозные)
 
-1. **Слоистая архитектура.** Domain не зависит от Infrastructure/Laravel; бизнес-логика — в Application/Domain, не в контроллерах и не в Filament Resource.
-2. **Тонкие контроллеры.** Контроллеры/Filament только принимают запрос, делегируют в сервис и возвращают Inertia-ответ; доступ к БД — через репозитории, не Eloquent в контроллере.
-3. **Framework-first.** Прежде чем писать инфраструктуру руками — искать готовое в Laravel/пакетах экосистемы.
-4. **Root-cause фиксы.** Чинить причину, а не симптом; каждый баг-фикс закрывается регрессионным тестом.
-5. **Безопасность по владельцу.** Рецепты изолированы по владельцу; авторизация — через Policies и явные проверки до бизнес-логики; на защищённые пути — обязательные негативные тесты.
+1. **`declare(strict_types=1)` в каждом `.php`.** Обязательная первая строка (`<?php declare(strict_types=1);`).
+2. **Изоляция Eloquent.** `Eloquent\Model` и фасад `DB` — ТОЛЬКО в `app/Data/Repositories/*`; контроллеры/Tasks/Resolvers/Vue напрямую Eloquent не трогают. Нарушение = ошибка **PHPStan Level 10**.
+3. **Единый поток данных.** Request (FormRequest) → Controller → Task → Repository → DTO (Spatie Data) → Page Resolver → Inertia Vue Page. **Наружу — только DTO** (никаких сырых моделей/массивов Eloquent).
+4. **Именование слоёв по каталогам.** Бизнес-операция = Task (`app/Tasks`); сборка пропсов = Resolver (`app/Resolvers/Page`); запросы к БД = Repository (`app/Data/Repositories`).
+5. **Framework-first + root-cause + безопасность по владельцу.** Готовое искать в Laravel/пакетах; баг-фикс закрывать регрессионным тестом; рецепты изолированы по владельцу (Policies + негативные тесты на защищённые пути).
 6. **Единый источник команд/версий стека** — [`guides/stack-specifics.md`](guides/stack-specifics.md); документация не дублирует значения из скриптов.
 
 ---
@@ -102,28 +100,30 @@ cbook — кулинарная книга (cookbook): веб-приложени�
 > **Скелет-опросник.** Структура секции стабильна; наполнение — под проект. Команды/версии — единый источник в [`guides/stack-specifics.md`](guides/stack-specifics.md).
 
 ### Runtime и инструменты
-- **Backend runtime:** PHP 8.3 (Laravel 11); зависимости — Composer; локальное окружение — Laravel Sail (Docker).
-- **Frontend runtime:** Node + TypeScript (Vite); пакетный менеджер — pnpm.
+- **Backend runtime:** PHP **8.4** (Laravel **12**); зависимости — Composer; локальное окружение — Laravel Sail (Docker).
+- **Frontend runtime:** Node + TypeScript **strict** (Vite); пакетный менеджер — pnpm.
 - **Репозитории:** одна клиентская репа `cbook` (моно); единая база знаний `ai/` (репозиторий study-cbook-ai) покрывает её.
 
 ### Backend
-- **Фреймворк:** Laravel 11 (PHP 8.3), слоистая архитектура (Domain / Application / Infrastructure).
-- **БД / ORM:** PostgreSQL (в Sail-контейнере); Eloquent — за репозиторным слоем.
+- **Фреймворк:** Laravel **12** (PHP **8.4**), строгая слоистая архитектура — поток Controller → Task → Repository → DTO → Resolver (см. §4, ADR-003).
+- **БД / ORM:** **MySQL 8** (Sail-сервис `mysql`, порт 3306); Eloquent — **только внутри `app/Data/Repositories/*`** (изоляция enforced PHPStan L10).
+- **Слой данных:** Spatie **Laravel Data** (DTO) + автогенерация TS-типов (`artisan typescript:transform`).
+- **Медиа:** `whyme-agency/laravel-media` (изображения рецептов).
 - **Auth:** Laravel auth (сессии); авторизация через Policies.
-- **Очереди / кэш:** Redis (Sail).
-- **Админка:** Filament 3 (`/admin`).
-- **Тесты / типы / линт:** Pest/PHPUnit · PHPStan (Larastan) · Laravel Pint.
+- **Очереди / кэш:** Redis (Sail) — как есть.
+- **Админка:** Filament **5** (`/admin`).
+- **Тесты / типы / линт:** **Pest PHP** · PHPStan **Level 10** (Larastan) · Laravel Pint (PSR-12, `declare_strict_types`).
 
 ### Frontend
-- **Фреймворк:** Inertia.js + Vue 3 + TypeScript (Vite).
-- **UI / состояние / слой данных:** SFC-компоненты Vue; состояние — composables/stores; данные приходят через props Inertia (сервер как источник), без прямого fetch на чужие хосты.
-- **Тесты / типы / линт:** (тесты — при необходимости Vitest) · `vue-tsc` · ESLint.
+- **Фреймворк:** Inertia.js + Vue 3 (`<script setup>`, TypeScript **strict**) + **Tailwind CSS** (Vite).
+- **UI / состояние / слой данных:** SFC-компоненты Vue; состояние — composables/stores; наружу приходят **только DTO** (Spatie Data) через props Inertia, без прямого fetch на чужие хосты. TS-типы DTO — автоген `artisan typescript:transform`.
+- **Тесты / типы / линт:** (тесты — при необходимости Vitest) · `vue-tsc` (strict) · ESLint.
 
 ### Инфраструктура и деплой
 - **Деплой / CI:** ветка `develop` (интеграционная) → merge в `main` = деплой; доставку и push делает пользователь.
 - **Таймзона:** хранение времени в UTC, вывод — по локали пользователя (уточняется при миграции).
-- **Локальный стенд:** Laravel Sail (Docker) — app :80, Vite :5173, PostgreSQL :5432, Redis :6379, Mailpit :8025 (детали — `ops/local-setup.md`).
-- **Legacy-инфраструктура (Nuxt-контур, переходная):** Prisma+PostgreSQL(Neon), MinIO(S3), Cloudflare Tunnel — существует до завершения миграции; при переходе на Sail адреса переезжают в контейнерные сервисы.
+- **Локальный стенд:** Laravel Sail (Docker) — app :80, Vite :5173, **MySQL 8 :3306**, Redis :6379, Mailpit :8025 (детали — `ops/local-setup.md`).
+- **Legacy-инфраструктура (Nuxt-контур, исходное состояние миграции):** Prisma + PostgreSQL(Neon), MinIO(S3), Cloudflare Tunnel — существует до завершения миграции; при переходе на Sail СУБД переезжает на MySQL 8, медиа — на `whyme-agency/laravel-media`.
 
 ---
 
@@ -150,19 +150,25 @@ study-cbook-ai/                  # workspace (не репозиторий)
 
 ## 4. Ключевые модули / сервисы
 
-> Целевая раскладка слоёв Laravel (уточняется по мере миграции — пути фиксируются по факту переноса).
+> Целевая раскладка слоёв Laravel по ТЗ — **конкретный поток**, не абстрактные Domain/Application/Infrastructure. Направление одностороннее: Controller → Task → Repository → DTO → Resolver → Inertia.
 
 ### Backend
-| Слой / модуль | Роль | Путь (ориентир) |
-|--------|------|------|
-| Domain | Сущности, VO, доменные правила; не зависит от Laravel | `cbook/app/Domain/...` |
-| Application | Сервисы/use-case, DTO, оркестрация доменной логики | `cbook/app/Application/...` |
-| Infrastructure | Eloquent-модели, репозитории, внешние адаптеры (S3/MinIO) | `cbook/app/Infrastructure/...` |
-| HTTP | Тонкие контроллеры, FormRequest, Inertia-ответы, роуты | `cbook/app/Http/...`, `cbook/routes/` |
-| Admin (Filament) | Панель `/admin`: Resource'ы без бизнес-логики (делегируют в сервисы) | `cbook/app/Filament/...` |
+| Слой / модуль | Роль | Путь | Eloquent/`DB`? |
+|--------|------|------|---|
+| FormRequest | Вся серверная валидация входа | `cbook/app/Http/Requests/...` | нет |
+| Controller | Тонкий: FormRequest → Task/Resolver → Inertia-ответ | `cbook/app/Http/Controllers/...` | нет |
+| Task | Одна бизнес-операция (`CreateRecipeTask`) | `cbook/app/Tasks/...` | нет |
+| Repository | Запросы к БД — **единственное место** Eloquent/`DB` | `cbook/app/Data/Repositories/...` | **ДА (только здесь)** |
+| DTO (Spatie Data) | Форма данных наружу; источник TS-типов (`typescript:transform`) | `cbook/app/Data/...` | нет |
+| Page Resolver | Сборка пропсов Inertia-страницы из DTO (`RecipeDetailResolver`) | `cbook/app/Resolvers/Page/...` | нет |
+| Eloquent-модели | `Recipe`, `Ingredient`, `User` — используются только из Repository | `cbook/app/Models/...` | — |
+| Enums | Домен-enum'ы (`Difficulty`) | `cbook/app/Enums/...` | нет |
+| Admin (Filament 5) | Панель `/admin`: Resource'ы без бизнес-логики (делегируют в Task/Repository) | `cbook/app/Filament/...` | делегируют |
+
+> **Инвариант изоляции Eloquent:** любой `Eloquent\Model`/фасад `DB` вне `app/Data/Repositories/*` = ошибка PHPStan Level 10. Наружу (в Task/Controller/Resolver/Inertia) ходят **только DTO**.
 
 ### Frontend
-Слои Inertia/Vue: страницы (`resources/js/Pages/`, роут = Inertia-страница) → компоненты (`resources/js/Components/`) → composables/stores (состояние) → типы TS. Данные приходят props'ами со страниц (сервер как слой-прокси), стили — через дизайн-токены/утилиты, не хардкод-литералы.
+Слои Inertia/Vue: страницы (`resources/js/Pages/`, Vue 3 `<script setup>` + TS strict, роут = Inertia-страница) → компоненты (`resources/js/Components/`) → composables/stores (состояние) → **DTO-типы (автоген `artisan typescript:transform`)**. В props приходят **только DTO** со стороны Resolver'а (сервер как слой-прокси); стили — **Tailwind CSS**-утилиты, не хардкод-литералы.
 
 ---
 
@@ -170,14 +176,21 @@ study-cbook-ai/                  # workspace (не репозиторий)
 
 > **Скелет-опросник (рубрика).** Опиши контуры БД и тестовую цепочку — даже если БД одна.
 
-- **Базы/контуры:** одна БД PostgreSQL. Локальный адрес — сервис `pgsql` в Sail (`DB_HOST=pgsql`, `:5432`). Legacy Nuxt-контур использовал Neon (managed Postgres) через Prisma; при миграции данные/схема переезжают под Laravel-миграции в Sail-Postgres.
+- **Базы/контуры:** одна БД **MySQL 8**. Локальный адрес — сервис `mysql` в Sail (`DB_CONNECTION=mysql`, `DB_HOST=mysql`, `:3306`). Legacy Nuxt-контур использовал Neon (managed Postgres) через Prisma; при миграции данные/схема переезжают под Laravel-миграции в Sail-MySQL (смена диалекта Postgres→MySQL).
 
   | База | Алиас/env | Назначение | Локальный адрес |
   |------|-----------|------------|-----------------|
-  | cbook (основная) | `DB_HOST=pgsql`, `DB_PORT=5432` | Рецепты, ингредиенты, шаги, категории, пользователи | Sail `pgsql:5432` |
+  | cbook (основная) | `DB_HOST=mysql`, `DB_PORT=3306` | Рецепты, ингредиенты, пользователи | Sail `mysql:3306` |
   | тестовая | `.env.testing` | Прогон Pest (RefreshDatabase) | эфемерная (пересоздаётся) |
 
-- **Миграции:** источник схемы — Laravel-миграции (`database/migrations/`, `artisan migrate`). Правило для нового кода: любое изменение схемы — через миграцию (не руками в БД); порядок создания сущности — миграция первой (см. stack-specifics §Backend). Grabli переноса с Prisma/Neon фиксируются в `memory.md` §Gotchas по мере миграции.
+- **Доменная схема (ТЗ):**
+
+  | Таблица | Колонки | Заметки |
+  |---|---|---|
+  | `recipes` | id, title, description, cooking_time (int), servings (int), difficulty (enum `low\|medium\|high`), **steps (JSON)**, created_at, updated_at | `steps` — JSON-массив строк (нет своего id/ЖЦ); хранится в самой таблице рецепта |
+  | `ingredients` | id, recipe_id (FK→recipes, **ON DELETE CASCADE**), name, quantity (float/decimal), unit (string) | Связь `Recipe hasMany Ingredient`; удаление рецепта каскадит ингредиенты |
+
+- **Миграции:** источник схемы — Laravel-миграции (`database/migrations/`, `artisan migrate`). Правило для нового кода: любое изменение схемы — через миграцию (не руками в БД); порядок создания сущности — миграция первой (см. stack-specifics §Backend). `steps` кастуется в модели как array (JSON-колонка), `difficulty` — как Enum. Грабли переноса Postgres→MySQL и Prisma→Laravel фиксируются в `memory.md` §Gotchas по мере миграции.
 - **Контуры dev-БД + тестовая цепочка:** dev — локальный Sail-Postgres; тесты — эфемерная БД по `.env.testing` с `RefreshDatabase`. Детали — [`guides/stack-specifics.md`](guides/stack-specifics.md) §Тесты.
 
 ---
@@ -194,7 +207,7 @@ study-cbook-ai/                  # workspace (не репозиторий)
 
 - **Ветки:** `develop` (интеграционная) → merge в `main` = деплой (прод). Наша доставка: ветка `feat/<slug>` → MR в `develop` (создаёт пользователь). CI-статус на интеграционной ветке — (уточнить: настроен ли pipeline на стороне клиента); деплой триггерится merge'ем в `main`.
 - **Доставка агентской работы (инвариант):** агент оставляет работу **локальным коммитом** в ветке `tasks/<slug>` (через `scripts/commit.sh`), проверенным гейтами. **`git push` и merge — только пользователь.** «✅ готово» = смерженный MR + зелёные локальные гейты (см. `guides/feature-workflow.md` Шаг 12).
-- **Локальный стенд:** `ops/local-setup.md` (`Laravel app :80 (Sail APP_PORT), Vite :5173, PostgreSQL :5432, Redis :6379, Mailpit :8025; Filament — /admin`).
+- **Локальный стенд:** `ops/local-setup.md` (`Laravel app :80 (Sail APP_PORT), Vite :5173, MySQL 8 :3306, Redis :6379, Mailpit :8025; Filament — /admin`).
 
 ---
 
@@ -243,8 +256,8 @@ study-cbook-ai/                  # workspace (не репозиторий)
 | 004 | Системный | Worktree-процесс через `task.sh` (ветка = задача) | [`adr/004-worktree-task-process.md`](adr/004-worktree-task-process.md) |
 | 009 | Системный | Per-commit rationale (разбор «почему» на коммит) | [`adr/009-per-commit-rationale.md`](adr/009-per-commit-rationale.md) |
 | 010 | Системный | Обязательное независимое ревью каждого коммита | [`adr/010-mandatory-commit-review.md`](adr/010-mandatory-commit-review.md) |
-| 002 | Принят | Целевой стек: Laravel 11 + Filament 3 + Inertia/Vue 3 + TS (Vite), Sail | [`adr/002-stack-laravel-filament-inertia.md`](adr/002-stack-laravel-filament-inertia.md) |
-| 003 | Принят | Слоистая архитектура (Domain/Application/Infrastructure) + инварианты слоёв | [`adr/003-layered-architecture.md`](adr/003-layered-architecture.md) |
+| 002 | Принят | Целевой стек: Laravel 12 + PHP 8.4 + MySQL 8 + Filament 5 + Inertia/Vue 3 (TS strict) + Spatie Data + Tailwind, Sail | [`adr/002-stack-laravel-filament-inertia.md`](adr/002-stack-laravel-filament-inertia.md) |
+| 003 | Принят | Строгая слоистая архитектура (Controller→Task→Repository→DTO→Resolver→Inertia; Eloquent только в `app/Data/Repositories/*`, enforced PHPStan L10) | [`adr/003-layered-architecture.md`](adr/003-layered-architecture.md) |
 | 006 | Принят | Миграция cbook с Nuxt 4 на Laravel (brownfield) | [`adr/006-migration-nuxt-to-laravel.md`](adr/006-migration-nuxt-to-laravel.md) |
 
 > Свободные номера 007 и далее — под будущие продуктовые ADR. Номера 005/008 исторически занимали системные ADR отключённых модулей (M5/M3) и не переиспользуются. Системные ADR (001/004/009/010) не перенумеровывать.

@@ -6,6 +6,7 @@
 <!-- MEMORY-TOC-START -->
 <!-- Оглавление между маркерами MEMORY-TOC-START/END. Одна строка на значимую запись/инициативу/gotcha
      со ссылкой-якорем, в порядке добавления. Скрипт-генератор пока НЕ подключён — держи блок вручную. -->
+- [North Star и целевой стек (ведущий контекст)](#north-star-и-целевой-стек-ведущий-контекст)
 - [Актуальный срез](#актуальный-срез)
 - [Реализовано](#реализовано)
 - [Открытые задачи / бэклог](#открытые-задачи--бэклог)
@@ -23,12 +24,42 @@
 
 ---
 
+## North Star и целевой стек (ведущий контекст)
+
+> Это **ведущий контекст всего проекта** — читается перед `Актуальным срезом`. Источник истины — уточнённое ТЗ заказчика (2026-07-28).
+
+**Общая цель (north star):** миграция cbook с легаси-стека **Nuxt 4 / Prisma / PostgreSQL(Neon)** на **enterprise-стек Laravel 12** в **строгой слоистой архитектуре** (Request → Controller → Task → Repository → DTO → Resolver → Inertia). Legacy Nuxt/Prisma — это **исходное состояние миграции**, а не параллельно развиваемый продукт.
+
+**Целевой стек (ТЗ, отменяет прежние дефолты):**
+- **Backend:** PHP **8.4** + Laravel **12** + MySQL **8**.
+- **Frontend:** Inertia.js + Vue 3 (`<script setup>`, TypeScript **strict**) + Tailwind CSS.
+- **Слой данных:** Spatie **Laravel Data** (DTO) + автогенерация TS-типов (`artisan typescript:transform`).
+- **Админка:** Filament **5**. **Медиа:** `whyme-agency/laravel-media`.
+- **Качество:** PHPStan **Level 10** + Laravel Pint (PSR-12, `declare_strict_types`). Тесты — **Pest PHP**.
+- **Локально:** Laravel **Sail** (Docker); СУБД — MySQL 8 (Sail-сервис `mysql`, порт 3306); инструмент — `./vendor/bin/sail`.
+
+**5 STRICT RULES (нарушение слоёв = ошибка PHPStan Level 10):**
+1. Каждый `.php` начинается с `<?php declare(strict_types=1);`.
+2. **Изоляция Eloquent:** `Eloquent\Model` и фасад `DB` — ТОЛЬКО внутри `app/Data/Repositories/*`. Контроллеры / Tasks / Resolvers / Vue напрямую Eloquent НЕ вызывают.
+3. **Поток данных:** Request (FormRequest) → Controller → Task (бизнес-логика) → Repository (запрос к БД) → DTO (Spatie Data) → Page Resolver → Inertia Vue Page.
+4. В Inertia/Vue передаются **ТОЛЬКО DTO (Spatie Data)** — никаких сырых моделей/массивов Eloquent.
+5. **Слои-именование:** одна бизнес-операция = один Task (`app/Tasks/CreateRecipeTask.php`); сборка пропсов страницы = Resolver (`app/Resolvers/Page/RecipeDetailResolver.php`); запросы к БД = Repository (`app/Data/Repositories/RecipeRepository.php`).
+
+**⚠️ Прежние дефолты ОТМЕНЕНЫ ТЗ:** было Laravel 11 / PHP 8.3 / PostgreSQL / Filament 3 → стало Laravel 12 / PHP 8.4 / MySQL 8 / Filament 5. **Открытый вопрос по СУБД снят** — MySQL 8 (Sail-сервис `mysql`, порт 3306). Слоёв «Domain/Application/Infrastructure» больше нет — их заменяет конкретный поток Task/Repository/DTO/Resolver (см. ADR-003).
+
+**Доменная модель (ТЗ):**
+- `Recipe`: id, title, description, cooking_time (int), servings (int), difficulty (Enum `low|medium|high`), steps (**JSON-массив строк**), created_at, updated_at.
+- `Ingredient`: id, recipe_id (FK→Recipe, cascade delete), name, quantity (float), unit (string).
+- `steps` — JSON-колонка (нет своего id/ЖЦ); `ingredients` — отдельная таблица `hasMany`.
+
+---
+
 ## Актуальный срез
 
 **Дата последнего обновления:** 2026-07-28
-**Текущая среда:** локальная разработка (Laravel Sail / Docker); интеграционная ветка — `develop`
-**Основной фокус:** база знаний `ai/` инициализирована. Клиентский код `cbook` пока на Nuxt 4 (Vue 3/TS, Prisma+PostgreSQL/Neon, MinIO). Целевой стек и слоистая архитектура зафиксированы в ADR-002/003.
-**Следующее:** первая крупная инициатива — миграция cbook с Nuxt 4 на Laravel 11 + Filament + Inertia/Vue (ADR-006). При её старте включить process-retro (M7).
+**Текущая среда:** локальная разработка (Laravel Sail / Docker; MySQL 8, сервис `mysql:3306`); интеграционная ветка — `develop`
+**Основной фокус:** база знаний `ai/` приведена к уточнённому ТЗ заказчика (стек Laravel 12 / PHP 8.4 / MySQL 8 / Filament 5; строгая слоистая архитектура Task/Repository/DTO/Resolver). Легаси-код cbook — Nuxt 4 (Vue 3/TS, Prisma+PostgreSQL/Neon, MinIO) — исходное состояние миграции. Целевой стек и слои зафиксированы в ADR-002/003, стек-специфика — в `guides/stack-specifics.md`.
+**Следующее:** первая крупная инициатива — миграция cbook с Nuxt 4 на Laravel 12 + Filament 5 + Inertia/Vue (ADR-006). При её старте включить process-retro (M7).
 
 ---
 
@@ -44,8 +75,9 @@
 
 ## Открытые задачи / бэклог
 
-- [ ] Миграция cbook: Nuxt 4 → Laravel 11 + Filament + Inertia/Vue (первая крупная инициатива, ADR-005). При старте — включить process-retro (M7).
-- [ ] Уточнить у владельца: CI на `develop` (настроен ли pipeline), финальный выбор БД (Postgres по умолчанию, преемственность с Neon).
+- [ ] Миграция cbook: Nuxt 4 → Laravel 12 + Filament 5 + Inertia/Vue (первая крупная инициатива, ADR-006). При старте — включить process-retro (M7).
+- [ ] Уточнить у владельца: CI на `develop` (настроен ли pipeline); дисковый драйвер для `whyme-agency/laravel-media` (локальный/S3) — `(уточнить)`.
+- [x] ~~Финальный выбор СУБД~~ — снят ТЗ: **MySQL 8** (Sail-сервис `mysql`, порт 3306).
 
 ---
 
@@ -53,8 +85,8 @@
 
 > Одна-две строки на решение + ссылка на карточку `adr/NNN-*.md`. Полное «почему» — в ADR, здесь — навигация.
 
-- ADR-002 — целевой стек Laravel 11 + Filament 3 + Inertia/Vue 3 + TS (Vite), Sail → `adr/002-stack-laravel-filament-inertia.md`
-- ADR-003 — слоистая архитектура Domain/Application/Infrastructure + инварианты слоёв → `adr/003-layered-architecture.md`
+- ADR-002 — целевой стек Laravel 12 + PHP 8.4 + MySQL 8 + Filament 5 + Inertia/Vue 3 (TS strict) + Spatie Data + Tailwind, Sail → `adr/002-stack-laravel-filament-inertia.md`
+- ADR-003 — строгая слоистая архитектура (поток Request→Controller→Task→Repository→DTO→Resolver→Inertia; изоляция Eloquent в `app/Data/Repositories/*`, enforced PHPStan L10) → `adr/003-layered-architecture.md`
 - ADR-006 — миграция cbook с Nuxt 4 на Laravel (brownfield) → `adr/006-migration-nuxt-to-laravel.md`
 - Системные ADR методологии (001/004/009/010) — см. `adr/README.md`.
 
@@ -64,8 +96,8 @@
 
 > Короткие durable-заметки о граблях (класс проблемы + как обойти). Расширяется по мере набивания шишек.
 
-- **БД: Neon → Sail Postgres.** Legacy-контур на управляемом Neon (Prisma); целевой — Postgres в Sail (`DB_HOST=pgsql`, `:5432`). При переносе схемы/данных сверяться с реальными миграциями; исторические Prisma-миграции напрямую не применимы к Laravel-миграциям.
-- **Файловое хранилище: MinIO/S3.** Изображения рецептов лежат в MinIO (S3-совместимо). В Laravel — драйвер `s3`; локально поднимать MinIO-сервис, боевые креды S3 из `.env` в тесты не тащить.
+- **БД: Neon(Postgres) → Sail MySQL 8.** Legacy-контур на управляемом Neon Postgres (Prisma); целевой по ТЗ — **MySQL 8** в Sail (сервис `mysql`, `DB_CONNECTION=mysql`, `DB_HOST=mysql`, `:3306`). Смена диалекта Postgres→MySQL: сверяться с реальными Laravel-миграциями; исторические Prisma-миграции напрямую не применимы. Прежний дефолт (Sail Postgres/`pgsql:5432`) отменён.
+- **Медиа: whyme-agency/laravel-media (не прямой s3).** Изображения рецептов в целевом стеке идут через пакет `whyme-agency/laravel-media`, а не через ручной драйвер `s3`. Дисковый драйвер (локальный/S3) — `(уточнить)`. Legacy-изображения лежали в MinIO (S3-совместимо); боевые креды из `.env` в тесты не тащить.
 - **Cloudflare Tunnel.** Внешний доступ к dev-стенду шёл через Cloudflare Tunnel (legacy). При Sail-стенде уточнить, нужен ли туннель; секреты туннеля — только в `.env`, наружу не выносить.
 - **process-retro (M7) отложен** — включить при первой крупной инициативе (миграция на Laravel).
 
