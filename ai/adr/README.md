@@ -61,9 +61,9 @@ ADR отключённых в этом профиле модулей — 005 (M5
 
 | # | Статус | Решение | Файл |
 |---|--------|---------|------|
-| 002 | Принят | Целевой стек: Laravel 11 + Filament 3 + Inertia/Vue 3 + TS (Vite), Sail | [`002-stack-laravel-filament-inertia.md`](002-stack-laravel-filament-inertia.md) |
-| 003 | Принят | Слоистая архитектура (Domain/Application/Infrastructure) + инварианты слоёв | [`003-layered-architecture.md`](003-layered-architecture.md) |
-| 006 | Принят | Миграция cbook с Nuxt 4 на Laravel (brownfield) | [`006-migration-nuxt-to-laravel.md`](006-migration-nuxt-to-laravel.md) |
+| 002 | Принят | Целевой стек: Laravel 12 + Filament 5 + Inertia/Vue 3 + TS (Vite), MySQL 8, Sail | [`002-stack-laravel-filament-inertia.md`](002-stack-laravel-filament-inertia.md) |
+| 003 | Принят | Строгая слоистая архитектура (Task/Repository/DTO/Resolver) + инварианты слоёв | [`003-layered-architecture.md`](003-layered-architecture.md) |
+| 006 | Принят | Переписывание cbook с нуля на Laravel ради обучения (greenfield; Nuxt = донор идеи+BVI) | [`006-migration-nuxt-to-laravel.md`](006-migration-nuxt-to-laravel.md) |
 
 ## Где ADR в workflow
 

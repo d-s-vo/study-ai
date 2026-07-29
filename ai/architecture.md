@@ -70,7 +70,7 @@
 ---
 ## 1. Концепция
 
-cbook — кулинарная книга (cookbook): веб-приложение для ведения и организации рецептов. Пользователь заводит рецепты (ингредиенты, шаги приготовления, изображения) и находит их по каталогу. Аудитория — домашние кулинары, ведущие личную коллекцию рецептов. Продукт существует как рабочее приложение на **Nuxt 4 (Prisma + PostgreSQL/Neon)** — это **исходное состояние миграции**; **north star проекта** — миграция на enterprise-стек **Laravel 12 + Filament 5 + Inertia/Vue** в **строгой слоистой архитектуре** (поток Request→Controller→Task→Repository→DTO→Resolver→Inertia). См. `memory.md` (ведущий контекст + 5 STRICT RULES) и ADR-002/003/006.
+cbook — кулинарная книга (cookbook): веб-приложение для ведения и организации рецептов. Пользователь заводит рецепты (ингредиенты, шаги приготовления, изображения) и находит их по каталогу. Аудитория — домашние кулинары, ведущие личную коллекцию рецептов. Легаси-версия существует на **Nuxt 4 (Prisma + PostgreSQL/Neon)** — это **донор идеи и BVI-панели, а не образец для порта**; **north star проекта** — **переписывание cbook с нуля ради обучения** сборке enterprise-**монолитов на Laravel** (стиль референс-проектов `listvafintess`/`av1`) на стек **Laravel 12 + Filament 5 + Inertia/Vue** в **строгой слоистой архитектуре** (поток Request→Controller→Task→Repository→DTO→Resolver→Inertia). cbook — учебный полигон, не продукт: сохраняем общую идею (кулинарная книга) + BVI-панель, остальное строим заново, дыры Nuxt-версии чиним. См. `memory.md` (ведущий контекст + 5 STRICT RULES), ADR-002/003/006 и `../PROJECT-BRIEF.md`.
 
 ### Ключевые сущности
 
@@ -121,9 +121,9 @@ cbook — кулинарная книга (cookbook): веб-приложени�
 
 ### Инфраструктура и деплой
 - **Деплой / CI:** ветка `develop` (интеграционная) → merge в `main` = деплой; доставку и push делает пользователь.
-- **Таймзона:** хранение времени в UTC, вывод — по локали пользователя (уточняется при миграции).
+- **Таймзона:** хранение времени в UTC, вывод — по локали пользователя (уточняется при переписывании).
 - **Локальный стенд:** Laravel Sail (Docker) — app :80, Vite :5173, **MySQL 8 :3306**, Redis :6379, Mailpit :8025 (детали — `ops/local-setup.md`).
-- **Legacy-инфраструктура (Nuxt-контур, исходное состояние миграции):** Prisma + PostgreSQL(Neon), MinIO(S3), Cloudflare Tunnel — существует до завершения миграции; при переходе на Sail СУБД переезжает на MySQL 8, медиа — на `whyme-agency/laravel-media`.
+- **Legacy-инфраструктура (Nuxt-контур, донор идеи+BVI):** Prisma + PostgreSQL(Neon), MinIO(S3), Cloudflare Tunnel — служит референсом и **замещается** переписанным Laravel-приложением (не работает как параллельный продукт). В целевом стеке схема пишется заново под MySQL 8, медиа — через `whyme-agency/laravel-media`.
 
 ---
 
@@ -176,7 +176,7 @@ study-cbook-ai/                  # workspace (не репозиторий)
 
 > **Скелет-опросник (рубрика).** Опиши контуры БД и тестовую цепочку — даже если БД одна.
 
-- **Базы/контуры:** одна БД **MySQL 8**. Локальный адрес — сервис `mysql` в Sail (`DB_CONNECTION=mysql`, `DB_HOST=mysql`, `:3306`). Legacy Nuxt-контур использовал Neon (managed Postgres) через Prisma; при миграции данные/схема переезжают под Laravel-миграции в Sail-MySQL (смена диалекта Postgres→MySQL).
+- **Базы/контуры:** одна БД **MySQL 8**. Локальный адрес — сервис `mysql` в Sail (`DB_CONNECTION=mysql`, `DB_HOST=mysql`, `:3306`). Legacy Nuxt-версия использовала Neon (managed Postgres) через Prisma — это референс; при переписывании **схема создаётся заново** под Laravel-миграции в Sail-MySQL (не перенос Prisma-схемы; исторические Prisma-миграции неприменимы).
 
   | База | Алиас/env | Назначение | Локальный адрес |
   |------|-----------|------------|-----------------|
@@ -258,7 +258,7 @@ study-cbook-ai/                  # workspace (не репозиторий)
 | 010 | Системный | Обязательное независимое ревью каждого коммита | [`adr/010-mandatory-commit-review.md`](adr/010-mandatory-commit-review.md) |
 | 002 | Принят | Целевой стек: Laravel 12 + PHP 8.4 + MySQL 8 + Filament 5 + Inertia/Vue 3 (TS strict) + Spatie Data + Tailwind, Sail | [`adr/002-stack-laravel-filament-inertia.md`](adr/002-stack-laravel-filament-inertia.md) |
 | 003 | Принят | Строгая слоистая архитектура (Controller→Task→Repository→DTO→Resolver→Inertia; Eloquent только в `app/Data/Repositories/*`, enforced PHPStan L10) | [`adr/003-layered-architecture.md`](adr/003-layered-architecture.md) |
-| 006 | Принят | Миграция cbook с Nuxt 4 на Laravel (brownfield) | [`adr/006-migration-nuxt-to-laravel.md`](adr/006-migration-nuxt-to-laravel.md) |
+| 006 | Принят | Переписывание cbook с нуля на Laravel ради обучения (greenfield; Nuxt = донор идеи+BVI) | [`adr/006-migration-nuxt-to-laravel.md`](adr/006-migration-nuxt-to-laravel.md) |
 
 > Свободные номера 007 и далее — под будущие продуктовые ADR. Номера 005/008 исторически занимали системные ADR отключённых модулей (M5/M3) и не переиспользуются. Системные ADR (001/004/009/010) не перенумеровывать.
 

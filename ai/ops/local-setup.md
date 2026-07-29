@@ -1,7 +1,7 @@
-# Локальное развёртывание — Laravel 11 (PHP 8.3), слоистая архитектура (Domain/Application/Infrastructure) + Inertia.js + Vue 3 + TypeScript (Vite); Filament 3 — админ-панель
+# Локальное развёртывание — Laravel 12 (PHP 8.4), строгая слоистая архитектура (Task/Repository/DTO/Resolver) + Inertia.js + Vue 3 + TypeScript (Vite); Filament 5 — админ-панель
 
 Локальный стенд — Laravel Sail (Docker Compose обвязка вокруг Laravel), поднимает полностью
-локальный стек: PHP-приложение (app), PostgreSQL (pgsql), Redis (кэш/очереди), Mailpit (перехват
+локальный стек: PHP-приложение (app), MySQL 8 (mysql), Redis (кэш/очереди), Mailpit (перехват
 почты), плюс фронтенд-тулчейн Vite/pnpm поверх Inertia.js + Vue 3 + TypeScript. Полный опросник по
 стеку — `ai/guides/stack-specifics.md`, этот файл — операторская выжимка «как реально поднять стенд
 руками».
@@ -16,7 +16,7 @@
 
 | Профиль | Файл | БД / кэш | Когда использовать |
 |---|---|---|---|
-| Локальный (по умолчанию) | `.env` | Sail `pgsql` :5432, Redis :6379 | Повседневная разработка (`sail up -d`) |
+| Локальный (по умолчанию) | `.env` | Sail `mysql` :3306, Redis :6379 | Повседневная разработка (`sail up -d`) |
 | Тестовый | `.env.testing` | эфемерная БД + `RefreshDatabase` | Прогон Pest-тестов (`sail artisan test`) |
 | Shared-dev | — | — | (уточнить) — не задан на момент инициализации |
 | Staging | — | — | (уточнить) — не задан на момент инициализации |
@@ -25,7 +25,7 @@
 
 | Сервис | Адрес | Контейнер / процесс | Примечание |
 |--------|-------|---------------------|------------|
-| PostgreSQL | `pgsql:5432` (внутри сети Sail), хост `DB_HOST=pgsql` | Sail-сервис `pgsql` | БД приложения |
+| MySQL 8 | `mysql:3306` (внутри сети Sail), хост `DB_HOST=mysql` | Sail-сервис `mysql` | БД приложения |
 | Redis | `redis:6379`, хост `REDIS_HOST=redis` | Sail-сервис `redis` | кэш/очереди |
 | Бэкенд (app) | `http://localhost:80` (Sail `APP_PORT`) | Sail-сервис `laravel.test`/`app` | Filament-админка — `/admin` |
 | Фронтенд (Vite) | `http://localhost:5173` | `pnpm dev` (вне Sail, на хосте) | HMR для Inertia/Vue |
@@ -36,7 +36,7 @@
 
 ## Ключевые файлы
 
-- `docker-compose.yml` (генерируется Sail) — инфраструктурные сервисы (app, pgsql, redis, mailpit).
+- `docker-compose.yml` (генерируется Sail) — инфраструктурные сервисы (app, mysql, redis, mailpit).
 - `.env` / `.env.example` — конфиг бэкенда (локальный профиль); `.env.testing` — тестовый профиль.
 - `storage/logs/` — логи Laravel (`laravel.log`); для live-tail — `sail artisan pail`.
 
@@ -59,7 +59,7 @@
 ```bash
 ./vendor/bin/sail up -d
 ```
-Проверка: `./vendor/bin/sail ps` — все сервисы (app, pgsql, redis, mailpit) `running`/`healthy`.
+Проверка: `./vendor/bin/sail ps` — все сервисы (app, mysql, redis, mailpit) `running`/`healthy`.
 
 ### 2. Бэкенд
 ```bash

@@ -54,6 +54,6 @@ cbook переезжает на Laravel 12 (ADR-002). Дефолтный Laravel
 ## Ссылки
 
 - [`002-stack-laravel-filament-inertia.md`](002-stack-laravel-filament-inertia.md) — стек.
-- [`006-migration-nuxt-to-laravel.md`](006-migration-nuxt-to-laravel.md) — миграция, в ходе которой слои наполняются.
+- [`006-migration-nuxt-to-laravel.md`](006-migration-nuxt-to-laravel.md) — переписывание, в ходе которого слои наполняются.
 - [`../guides/stack-specifics.md`](../guides/stack-specifics.md) — инварианты и порядок создания сущности.
 - [`../architecture.md`](../architecture.md) §4 — раскладка слоёв.

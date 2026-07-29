@@ -6,7 +6,7 @@
 
 > ⛔ **Гигиена клиентского репозитория** действует на весь код (см. `../architecture.md` §8): без следов системы, коммит через `scripts/commit.sh`, временные пометки только `~wip~`, push — только пользователь.
 
-> **Стек (ТЗ):** PHP **8.4** + Laravel **12** + MySQL **8**; Inertia.js + Vue 3 (`<script setup>`, TypeScript **strict**) + **Tailwind CSS**; слой данных — Spatie **Laravel Data** (DTO) + `artisan typescript:transform`; админка — Filament **5**; медиа — `whyme-agency/laravel-media`; качество — PHPStan **Level 10** + Laravel Pint (PSR-12, `declare_strict_types`). Строгая слоистая архитектура (поток Request→Controller→Task→Repository→DTO→Resolver→Inertia). Локально — Laravel Sail (Docker), СУБД MySQL 8 (сервис `mysql`, порт 3306), инструмент `./vendor/bin/sail`. Legacy-контур (Nuxt 4 / Prisma / Neon Postgres / MinIO) — исходное состояние миграции, см. `../memory.md`.
+> **Стек (ТЗ):** PHP **8.4** + Laravel **12** + MySQL **8**; Inertia.js + Vue 3 (`<script setup>`, TypeScript **strict**) + **Tailwind CSS**; слой данных — Spatie **Laravel Data** (DTO) + `artisan typescript:transform`; админка — Filament **5**; медиа — `whyme-agency/laravel-media`; качество — PHPStan **Level 10** + Laravel Pint (PSR-12, `declare_strict_types`). Строгая слоистая архитектура (поток Request→Controller→Task→Repository→DTO→Resolver→Inertia). Локально — Laravel Sail (Docker), СУБД MySQL 8 (сервис `mysql`, порт 3306), инструмент `./vendor/bin/sail`. Legacy-контур (Nuxt 4 / Prisma / Neon Postgres / MinIO) — донор идеи и BVI-панели, замещается переписанным Laravel-приложением, см. `../memory.md`.
 >
 > ⚠️ Прежние дефолты (Laravel 11 / PHP 8.3 / PostgreSQL / Filament 3) **отменены ТЗ**.
 
@@ -138,7 +138,7 @@ DTO-типы (автоген из `typescript:transform`) → composable/store (
 
 - **Таймзона:** хранить время в UTC (`APP_TIMEZONE=UTC` / `timestamp`-колонки), выводить по локали пользователя; в тестах фиксировать время явно.
 - **Медиа (изображения рецептов):** через пакет `whyme-agency/laravel-media` (не ручной драйвер `s3`); дисковый бэкенд (локальный/S3) — `(уточнить)`; креды только из `.env`.
-- **Legacy-интеграции (Nuxt-контур, исходное состояние миграции):** Neon (Postgres) через Prisma, MinIO (S3), Cloudflare Tunnel — при миграции переезжают в Sail (MySQL 8) / уточняются.
+- **Legacy-интеграции (Nuxt-контур, донор идеи+BVI, замещается):** Neon (Postgres) через Prisma, MinIO (S3), Cloudflare Tunnel — референс; в целевом стеке схема пишется заново под Sail (MySQL 8), медиа — через `whyme-agency/laravel-media` / уточняются.
 
 ---
 

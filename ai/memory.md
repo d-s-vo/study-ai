@@ -28,7 +28,7 @@
 
 > Это **ведущий контекст всего проекта** — читается перед `Актуальным срезом`. Источник истины — уточнённое ТЗ заказчика (2026-07-28).
 
-**Общая цель (north star):** миграция cbook с легаси-стека **Nuxt 4 / Prisma / PostgreSQL(Neon)** на **enterprise-стек Laravel 12** в **строгой слоистой архитектуре** (Request → Controller → Task → Repository → DTO → Resolver → Inertia). Legacy Nuxt/Prisma — это **исходное состояние миграции**, а не параллельно развиваемый продукт.
+**Общая цель (north star):** **переписывание cbook с нуля ради обучения** — владелец осваивает сборку enterprise-**монолитов на Laravel** (стиль референс-проектов `listvafintess`/`av1`) на **стеке Laravel 12** в **строгой слоистой архитектуре** (Request → Controller → Task → Repository → DTO → Resolver → Inertia). cbook — **подопытный кролик**, не продукт. Сохраняем только **общую идею** (кулинарная книга) и **специфичные блоки — прежде всего BVI-панель**. Legacy **Nuxt 4 / Prisma / PostgreSQL(Neon)** = **донор идеи и BVI, а не образец для порта**; он **замещается**, а не развивается параллельно. Дыры Nuxt-версии (нет auth, нет серверной валидации, утечки, небезопасная загрузка) — **чинить, не воспроизводить**. Подробная рамка — `../PROJECT-BRIEF.md`.
 
 **Целевой стек (ТЗ, отменяет прежние дефолты):**
 - **Backend:** PHP **8.4** + Laravel **12** + MySQL **8**.
@@ -58,8 +58,8 @@
 
 **Дата последнего обновления:** 2026-07-28
 **Текущая среда:** локальная разработка (Laravel Sail / Docker; MySQL 8, сервис `mysql:3306`); интеграционная ветка — `develop`
-**Основной фокус:** база знаний `ai/` приведена к уточнённому ТЗ заказчика (стек Laravel 12 / PHP 8.4 / MySQL 8 / Filament 5; строгая слоистая архитектура Task/Repository/DTO/Resolver). Легаси-код cbook — Nuxt 4 (Vue 3/TS, Prisma+PostgreSQL/Neon, MinIO) — исходное состояние миграции. Целевой стек и слои зафиксированы в ADR-002/003, стек-специфика — в `guides/stack-specifics.md`.
-**Следующее:** первая крупная инициатива — миграция cbook с Nuxt 4 на Laravel 12 + Filament 5 + Inertia/Vue (ADR-006). При её старте включить process-retro (M7).
+**Основной фокус:** база знаний `ai/` приведена к уточнённой рамке — **учебное переписывание cbook с нуля** на стек Laravel 12 / PHP 8.4 / MySQL 8 / Filament 5 (строгая слоистая архитектура Task/Repository/DTO/Resolver). Легаси-код cbook — Nuxt 4 (Vue 3/TS, Prisma+PostgreSQL/Neon, MinIO) — **донор идеи и BVI-панели, не образец для порта**; замещается. Целевой стек и слои зафиксированы в ADR-002/003, стек-специфика — в `guides/stack-specifics.md`; полная рамка — `../PROJECT-BRIEF.md`.
+**Следующее:** первая крупная инициатива — переписывание cbook с нуля на Laravel 12 + Filament 5 + Inertia/Vue ради обучения enterprise-паттернам (ADR-006). Старт — greenfield-скелет (Laravel-проекта в репо ещё нет, `app/` занят Nuxt). При старте включить process-retro (M7).
 
 ---
 
@@ -75,7 +75,7 @@
 
 ## Открытые задачи / бэклог
 
-- [ ] Миграция cbook: Nuxt 4 → Laravel 12 + Filament 5 + Inertia/Vue (первая крупная инициатива, ADR-006). При старте — включить process-retro (M7).
+- [ ] Переписывание cbook с нуля на Laravel 12 + Filament 5 + Inertia/Vue ради обучения (первая крупная инициатива, ADR-006; greenfield-скелет первым, Nuxt = донор идеи+BVI). При старте — включить process-retro (M7).
 - [ ] Уточнить у владельца: CI на `develop` (настроен ли pipeline); дисковый драйвер для `whyme-agency/laravel-media` (локальный/S3) — `(уточнить)`.
 - [x] ~~Финальный выбор СУБД~~ — снят ТЗ: **MySQL 8** (Sail-сервис `mysql`, порт 3306).
 
@@ -87,7 +87,7 @@
 
 - ADR-002 — целевой стек Laravel 12 + PHP 8.4 + MySQL 8 + Filament 5 + Inertia/Vue 3 (TS strict) + Spatie Data + Tailwind, Sail → `adr/002-stack-laravel-filament-inertia.md`
 - ADR-003 — строгая слоистая архитектура (поток Request→Controller→Task→Repository→DTO→Resolver→Inertia; изоляция Eloquent в `app/Data/Repositories/*`, enforced PHPStan L10) → `adr/003-layered-architecture.md`
-- ADR-006 — миграция cbook с Nuxt 4 на Laravel (brownfield) → `adr/006-migration-nuxt-to-laravel.md`
+- ADR-006 — переписывание cbook с нуля на Laravel ради обучения (greenfield; Nuxt = донор идеи+BVI, замещается) → `adr/006-migration-nuxt-to-laravel.md`
 - Системные ADR методологии (001/004/009/010) — см. `adr/README.md`.
 
 ---
@@ -96,10 +96,11 @@
 
 > Короткие durable-заметки о граблях (класс проблемы + как обойти). Расширяется по мере набивания шишек.
 
-- **БД: Neon(Postgres) → Sail MySQL 8.** Legacy-контур на управляемом Neon Postgres (Prisma); целевой по ТЗ — **MySQL 8** в Sail (сервис `mysql`, `DB_CONNECTION=mysql`, `DB_HOST=mysql`, `:3306`). Смена диалекта Postgres→MySQL: сверяться с реальными Laravel-миграциями; исторические Prisma-миграции напрямую не применимы. Прежний дефолт (Sail Postgres/`pgsql:5432`) отменён.
+- **БД: схема пишется ЗАНОВО под MySQL 8 (не перенос Postgres→MySQL).** Целевая СУБД — **MySQL 8** в Sail (сервис `mysql`, `DB_CONNECTION=mysql`, `DB_HOST=mysql`, `:3306`). Схема создаётся с нуля под Laravel-миграции (`database/migrations`) — это переписывание, а не перенос Prisma-схемы; исторические Prisma-миграции неприменимы. Legacy Neon Postgres — только референс. Прежний дефолт (Sail Postgres/`pgsql:5432`) отменён.
 - **Медиа: whyme-agency/laravel-media (не прямой s3).** Изображения рецептов в целевом стеке идут через пакет `whyme-agency/laravel-media`, а не через ручной драйвер `s3`. Дисковый драйвер (локальный/S3) — `(уточнить)`. Legacy-изображения лежали в MinIO (S3-совместимо); боевые креды из `.env` в тесты не тащить.
-- **Cloudflare Tunnel.** Внешний доступ к dev-стенду шёл через Cloudflare Tunnel (legacy). При Sail-стенде уточнить, нужен ли туннель; секреты туннеля — только в `.env`, наружу не выносить.
-- **process-retro (M7) отложен** — включить при первой крупной инициативе (миграция на Laravel).
+- **Cloudflare Tunnel.** Внешний доступ к legacy dev-стенду шёл через Cloudflare Tunnel. При Sail-стенде уточнить, нужен ли туннель; секреты туннеля — только в `.env`, наружу не выносить.
+- **Дыры Nuxt-версии — чинить, не воспроизводить.** В легаси нет auth, нет серверной валидации, ошибки текут наружу, небезопасная загрузка файлов. При переписывании auth+серверная валидация вводятся сразу; порт 1:1 этих дыр запрещён (Nuxt = донор идеи+BVI, не образец).
+- **process-retro (M7) отложен** — включить при первой крупной инициативе (переписывание на Laravel).
 
 ---
 
