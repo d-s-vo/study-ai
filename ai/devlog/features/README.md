@@ -31,6 +31,7 @@ FEAT-NNN-slug/
 | FEAT | Ветка (клиентская репа) | Репо | Статус | Коммит | Что |
 |------|-------------------------|------|--------|--------|-----|
 | FEAT-001 | `feat/example-slug` | cbook | done (пример строки) | 0000000 | пример: короткое описание сделанного |
+| FEAT-002 | `feat/laravel-skeleton` | cbook | done (у владельца — deliver) | 9f4b857 | greenfield-скелет Laravel 12 + enterprise-слои + QA-тулчейн |
 <!-- FEAT-MAP:END -->
 
 > Строки таблицы — `⚙️ RUNTIME`: append-only, пишутся `scripts/feat-map.sh` (или вручную под

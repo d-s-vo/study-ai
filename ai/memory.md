@@ -56,10 +56,10 @@
 
 ## Актуальный срез
 
-**Дата последнего обновления:** 2026-07-28
-**Текущая среда:** локальная разработка (Laravel Sail / Docker; MySQL 8, сервис `mysql:3306`); интеграционная ветка — `develop`
-**Основной фокус:** база знаний `ai/` приведена к уточнённой рамке — **учебное переписывание cbook с нуля** на стек Laravel 12 / PHP 8.4 / MySQL 8 / Filament 5 (строгая слоистая архитектура Task/Repository/DTO/Resolver). Легаси-код cbook — Nuxt 4 (Vue 3/TS, Prisma+PostgreSQL/Neon, MinIO) — **донор идеи и BVI-панели, не образец для порта**; замещается. Целевой стек и слои зафиксированы в ADR-002/003, стек-специфика — в `guides/stack-specifics.md`; полная рамка — `../PROJECT-BRIEF.md`.
-**Следующее:** первая крупная инициатива — переписывание cbook с нуля на Laravel 12 + Filament 5 + Inertia/Vue ради обучения enterprise-паттернам (ADR-006). Старт — greenfield-скелет (Laravel-проекта в репо ещё нет, `app/` занят Nuxt). При старте включить process-retro (M7).
+**Дата последнего обновления:** 2026-07-29
+**Текущая среда:** локальная разработка (Laravel Sail / Docker через OrbStack; MySQL 8, сервис `mysql:3306`); интеграционная ветка — `develop`
+**Основной фокус:** запущено переписывание cbook на Laravel. **FEAT-002 (greenfield-скелет 1a) — DONE**: в `feat/laravel-skeleton` развёрнут чистый Laravel 12.64 / PHP 8.4 / MySQL 8, enterprise-каркас слоёв (`BaseTask`/`BaseRepository`, Data/Tasks/Resolvers) и QA-тулчейн (Pint psr12+strict, Larastan L10, Pest arch-барьер). Легаси Nuxt 4 вынесен в `local/legacy_nuxt/` (донор идеи+BVI, не образец для порта).
+**Следующее:** доставка FEAT-002 в git клиента — за владельцем (`deliver.sh cbook feat/laravel-skeleton` → PR в `develop`). Далее — задача 1b/следующие шаги переписывания (домен Recipe/Ingredient, миграции MySQL 8, Filament 5, Inertia/Vue, media). При старте крупной инициативы — включить process-retro (M7).
 
 ---
 
@@ -69,13 +69,15 @@
 
 <!-- Формат записи инициативы: краткий итог + ключевые контракты/gotchas + ссылка на ADR/impl. -->
 - **Инициализация базы знаний `ai/`** (2026-07-28): развёрнута двухконтурная система (study-cbook-ai вне кода клиента). Профиль: M1/M2/M6 ON, M7 отложен, M3/M4/M5/M8/M9 off. Зафиксированы стартовые ADR-002/003/006.
-- Продуктовых фич пока не закрыто — первая ожидаемая инициатива см. «Актуальный срез».
+- **FEAT-002 — greenfield-скелет Laravel 12 (задача 1a)** (2026-07-29): в `feat/laravel-skeleton` (коммит `9f4b857`) развёрнут чистый Laravel **12.64** (pinned) / PHP **8.4.23** / MySQL 8 через Sail (OrbStack). Enterprise-каркас: `app/Tasks/BaseTask.php` (`handle(): mixed`), `app/Data/Repositories/BaseRepository.php`, пустые слои `app/Data/`, `app/Resolvers/Page/` (`.gitkeep`). QA-инварианты: Pint (psr12 + `declare_strict_types`), Larastan **L10** (No errors), Pest **arch-барьер** изоляции Eloquent/DB по слоям (доказан red→green). Пакеты: `spatie/laravel-data` (prod); larastan/pest (dev). Legacy Nuxt → `local/legacy_nuxt/`. Детали — `devlog/features/FEAT-002-laravel-skeleton/impl.md`; разбор коммита — `devlog/commits/cbook/9f4b857-laravel-skeleton.md`. Исполнение под ADR-002/003/006, новых ADR не вводит. Доставка в git клиента — за владельцем.
 
 ---
 
 ## Открытые задачи / бэклог
 
-- [ ] Переписывание cbook с нуля на Laravel 12 + Filament 5 + Inertia/Vue ради обучения (первая крупная инициатива, ADR-006; greenfield-скелет первым, Nuxt = донор идеи+BVI). При старте — включить process-retro (M7).
+- [ ] Переписывание cbook с нуля на Laravel 12 + Filament 5 + Inertia/Vue ради обучения (крупная инициатива, ADR-006; Nuxt = донор идеи+BVI). При старте — включить process-retro (M7).
+  - [x] ~~Задача 1a — greenfield-скелет (FEAT-002)~~ — DONE (коммит `9f4b857`, доставка за владельцем).
+  - [ ] Задача 1b и далее — домен Recipe/Ingredient, миграции MySQL 8, Filament 5, Inertia/Vue, media.
 - [ ] Уточнить у владельца: CI на `develop` (настроен ли pipeline); дисковый драйвер для `whyme-agency/laravel-media` (локальный/S3) — `(уточнить)`.
 - [x] ~~Финальный выбор СУБД~~ — снят ТЗ: **MySQL 8** (Sail-сервис `mysql`, порт 3306).
 
@@ -101,6 +103,11 @@
 - **Cloudflare Tunnel.** Внешний доступ к legacy dev-стенду шёл через Cloudflare Tunnel. При Sail-стенде уточнить, нужен ли туннель; секреты туннеля — только в `.env`, наружу не выносить.
 - **Дыры Nuxt-версии — чинить, не воспроизводить.** В легаси нет auth, нет серверной валидации, ошибки текут наружу, небезопасная загрузка файлов. При переписывании auth+серверная валидация вводятся сразу; порт 1:1 этих дыр запрещён (Nuxt = донор идеи+BVI, не образец).
 - **process-retro (M7) отложен** — включить при первой крупной инициативе (переписывание на Laravel).
+- **`laravel.build`/`laravel new` даёт ПОСЛЕДНЮЮ мажорную (на 2026 — вероятно 13), не 12.** Для целевого Laravel 12 разворачивать через pinned `composer create-project laravel/laravel "12.*"` (можно в контейнере `laravelsail/php84-composer`, хостовый PHP не нужен). Проверять `artisan --version` / `laravel/framework` в `composer.lock`.
+- **Sail дефолтит на свежий PHP-runtime (был 8.5).** Целевой стек — PHP 8.4: править `compose.yaml` (build context `runtimes/8.4`, image `sail-8.4/app`). Доступные runtimes — `vendor/laravel/sail/runtimes/`.
+- **Legacy-референс → `local/legacy_nuxt/`, НЕ в клиентский worktree.** Клиентский worktree = только актуальный код (двухконтурная модель). `local/` игнорируется в study-cbook-ai и вне любого worktree → ноль риска утечки legacy в клиентский коммит. Не добавлять `/legacy_*/` в клиентский `.gitignore` (папки там нет). Старый код всё равно отражается в git как удаления.
+- **Секрет-детектор pre-commit ловит хеши `composer.lock` (и `package-lock.json`) как секреты** — ложное срабатывание на `content-hash`/`reference`/`shasum` (32/40 hex). Гасится узким allow-паттерном в `githooks/allowpatterns-root.txt` (`secret_allowed`). Правит **только владелец** — обвязка блокирует запись агентом (Edit/Write и, по духу, Bash). Реальные `PASSWORD=`/`TOKEN=`/AWS-ключи по-прежнему ловятся.
+- **Docker-демон — OrbStack** (не Docker Desktop). `docker context` = `orbstack`; поднять — `open -a OrbStack`. Sail работает поверх без изменений.
 
 ---
 
@@ -108,8 +115,8 @@
 
 > Опциональные сквозные счётчики (следующий свободный FEAT-номер, последний ADR и т.п.) — чтобы не сверяться каждый раз вручную.
 
-- Следующий свободный FEAT: FEAT-001
-- Последний ADR: 010 (системный); последний продуктовый — 005; следующий свободный продуктовый — 006
+- Следующий свободный FEAT: FEAT-003 (FEAT-002 = greenfield-скелет, done 2026-07-29)
+- Последний ADR: 010 (системный); последний продуктовый — 006; следующий свободный продуктовый — 007
 
 ---
 
