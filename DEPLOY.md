@@ -11,6 +11,21 @@
 
 ---
 
+## ⚠️ ДВА РАЗНЫХ РЕПОЗИТОРИЯ — НЕ ПЕРЕПУТАЙ (частая ошибка)
+
+| Каталог | Что это | Ветки | origin | Для чего |
+|---|---|---|---|---|
+| `study-cbook-ai/` | **репо ЗНАНИЙ** (workspace) | только `main` | `study-ai.git` | контекст/скрипты; **git-деплой тут НЕ делать** |
+| `~/cbook-int/` (клон клиента) | **клиентский проект** | `main`, `develop`, `feat/*` | `nuxt4-ts-project-cbook` | сюда §2–§4 (merge/push) |
+
+Если `git switch develop` даёт `fatal: invalid reference: develop` — ты **в `study-cbook-ai`** (там нет
+`develop`). Перейди в клиентский клон: `cd ~/cbook-int`. Быстрая проверка «где я»:
+```bash
+git remote get-url origin    # клиентский клон → …/nuxt4-ts-project-cbook ; если …/study-ai.git — ты не там
+```
+
+---
+
 ## 0. Предпосылки (один раз)
 
 - Работай из **обычного терминала** (не через `!` в сессии Claude).
@@ -18,8 +33,10 @@
   клоны дрейфуют и рождают лишние мерж-петли):
   ```bash
   git clone https://github.com/d-s-vo/nuxt4-ts-project-cbook ~/cbook-int
+  cd ~/cbook-int
+  git remote get-url origin      # ДОЛЖНО быть …/nuxt4-ts-project-cbook (проверка, что не в репо знаний)
   ```
-  Дальше все команды §2–§4 — из этого клона (`cd ~/cbook-int`).
+  **Все команды §2–§4 выполняются ТОЛЬКО из этого клона** (`cd ~/cbook-int`), НЕ из `study-cbook-ai`.
 
 ---
 
