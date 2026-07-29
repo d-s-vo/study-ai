@@ -93,6 +93,20 @@ AIPUSH_TOUCHER=$!
 # выхода, включая die (die → exit → EXIT-trap).
 trap 'kill "$AIPUSH_TOUCHER" 2>/dev/null; coord_unlock ai-push' EXIT INT TERM
 
+# 6a. Первичный пуш: если ветки '$BRANCH' на origin ещё нет (пустой remote), rebase не к чему —
+#     origin/$BRANCH не существует и `pull --rebase` упал бы на «couldn't find remote ref».
+#     Под локом пушим напрямую, устанавливая upstream. Если отвергнут (кто-то создал ветку между
+#     проверкой и пушем) — die, повтор пойдёт уже по обычному rebase-пути ниже.
+if ! git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+    say "== origin не содержит ветки '$BRANCH' — первичная публикация =="
+    say "== git push -u origin $BRANCH =="
+    if git push -u origin "$BRANCH"; then
+        kill "$AIPUSH_TOUCHER" 2>/dev/null; coord_unlock ai-push; trap - EXIT INT TERM
+        exit 0
+    fi
+    die "первичный push отвергнут (ветка появилась на origin?) — повторите ./scripts/ai-push.sh."
+fi
+
 # 6. Rebase-retry в критической секции (вместо однократного pull+push). Под локом
 #    non-fast-forward между нашими инстансами исключён; retry покрывает гонку с каналом ВНЕ
 #    нашего лока (напр. пользовательский push) и сетевые сбои.
