@@ -1,102 +1,112 @@
-# DEPLOY — терминальный чеклист (выполняет человек)
+# DEPLOY — доставка и деплой стандартным git (выполняет человек)
 
-Пошаговая доставка и деплой клиентского репозитория `cbook`
-(`github.com/d-s-vo/nuxt4-ts-project-cbook`) через workspace.
+Интеграция и деплой клиентского репозитория `cbook`
+(`github.com/d-s-vo/nuxt4-ts-project-cbook`) **обычными командами git** — без `gh` CLI и без
+ручной возни с PR в вебе.
 
-> **Принцип.** Агент делает всё ВНУТРИ workspace (код, `commit.sh`) и наружу НЕ пушит.
-> Всё, что уходит на GitHub — **только ты, в обычном терминале** (не через `!` в сессии).
+> **Принцип.** Агент делает код ВНУТРИ workspace. Ты — всё, что уходит на GitHub.
 > Направление всегда: **фича → `develop` → `main`**. В `main` напрямую фичи не мержим.
+> Единственный не-«голый git» шаг — вынос ветки из workspace (см. §1): push оттуда намеренно
+> заблокирован охранной обвязкой (скан следов ИИ), и `deliver.sh` — санкционированный гейт.
 
 ---
 
 ## 0. Предпосылки (один раз)
 
-- Запускать из **обычного терминала** (не из чата Claude) и из корня workspace:
+- Работай из **обычного терминала** (не через `!` в сессии Claude).
+- Заведи **ОДИН** рабочий клон клиентского репо для интеграции (не плоди клоны — параллельные
+  клоны дрейфуют и рождают лишние мерж-петли):
   ```bash
-  cd /Users/dmitry/server/sites/study-cbook-ai
+  git clone https://github.com/d-s-vo/nuxt4-ts-project-cbook ~/cbook-int
   ```
-- Для терминальных PR — GitHub CLI (иначе используй веб-UI, см. fallback):
-  ```bash
-  brew install gh          # если не установлен
-  gh auth login            # авторизация в GitHub
-  ```
-
-Переменная для удобства (репозиторий клиента):
-```bash
-REPO=d-s-vo/nuxt4-ts-project-cbook
-```
+  Дальше все команды §2–§4 — из этого клона (`cd ~/cbook-int`).
 
 ---
 
-## 1. Доставка фичи на GitHub
+## 1. Вынести ветку фичи на GitHub
 
-Выполняется ПОСЛЕ того, как агент закоммитил работу в ветку `feat/<slug>`
-(агент сообщит имя ветки). Пуш ветки:
-
+Ветка `feat/<slug>` создана агентом в запертом workspace. Выносим её на origin через гейт чистоты:
 ```bash
 cd /Users/dmitry/server/sites/study-cbook-ai
 ./scripts/deliver.sh cbook feat/<slug>
 ```
+Спросит повторить имя ветки → запушит на GitHub, прогнав скан следов ИИ.
 
-`deliver.sh` просканирует исходящие коммиты (сообщения/дифф/автор), попросит
-**повторно ввести имя ветки** для подтверждения и запушит `feat/<slug>` на GitHub.
-
----
-
-## 2. PR фичи в `develop` и merge
-
-**Терминал (gh):**
-```bash
-gh pr create  --repo $REPO --base develop --head feat/<slug> --fill
-gh pr merge   --repo $REPO feat/<slug> --merge --delete-branch
-```
-(`--delete-branch` сразу удаляет ветку после мержа.)
-
-**UI-fallback:** открой PR `base: develop` ← `compare: feat/<slug>` → **Merge** → **Delete branch**.
+> Почему не «голый git»: прямой push из workspace заблокирован рельсами (`pushurl=DISABLED` +
+> pre-push хук). `deliver.sh` — единственный санкционированный путь, и он делает скан.
+> *(Полностью без deliver.sh — см. «Альтернатива» внизу; но она обходит скан чистоты.)*
 
 ---
 
-## 3. Деплой: `develop` → `main`
+## 2. Влить фичу в `develop` — стандартный git
 
-Когда `develop` готов к релизу (набралось нужное):
-
-**Терминал (gh):**
+Из интеграционного клона (⚠️ **ВСЕГДА `fetch` первым** — иначе расхождения):
 ```bash
-gh pr create --repo $REPO --base main --head develop --title "Release" --body "Deploy develop -> main"
-gh pr merge  --repo $REPO develop --merge
+cd ~/cbook-int
+git fetch origin
+git switch develop
+git merge --ff-only origin/develop       # подтянуть develop к origin
+git merge origin/feat/<slug>             # влить фичу
+git push origin develop
 ```
 
-**UI-fallback:** PR `base: main` ← `compare: develop` → **Merge**.
+---
 
-> Это **единственный** `develop→main` мерж на релиз. Между релизами main не трогаем.
+## 3. Деплой `develop` → `main` — стандартный git
+
+Когда `develop` готов к релизу:
+```bash
+git fetch origin
+git switch main
+git merge --ff-only origin/main
+git merge origin/develop
+git push origin main
+```
+Это и есть деплой. Между релизами `develop→main` больше не трогаем.
 
 ---
 
-## 4. Сообщи агенту
+## 4. Удалить ветку фичи — стандартный git
 
-После мержа скажи в чате «готово» — агент приберёт локально:
-`./scripts/sync.sh --cleanup` → `./scripts/task.sh rm <slug>`.
+```bash
+git push origin --delete feat/<slug>
+```
+Затем скажи агенту «готово» — он приберёт локально (`sync.sh --cleanup` → `task.sh rm <slug>`).
 
 ---
 
 ## Проверка состояния (в любой момент)
 
 ```bash
-cd /Users/dmitry/server/sites/study-cbook-ai
-git -C .repos/cbook.git fetch origin --prune
-git -C .repos/cbook.git ls-remote --heads origin     # какие ветки на GitHub
-git -C .repos/cbook.git log --oneline --graph --decorate -6 origin/main origin/develop
+git fetch origin --prune
+git branch -r
+git log --oneline --graph --decorate -8 origin/main origin/develop
 ```
 
 ---
 
-## ⚠️ Правила (чтобы не было «плясок»)
+## ⚠️ Правила (чтобы не было петель, как в прошлый раз)
 
-1. **Один канал:** доставка/PR/merge — только через этот чеклист. Личный клон
-   `/study` для git-операций **не трогать** (параллельный клон дрейфует → петли в истории).
-2. **Фича — в `develop`, никогда напрямую в `main`.**
-3. **`deliver.sh` / push / merge / удаление веток — только человек**, в обычном терминале.
-   Агенту эти операции запрещены рельсами физически.
-4. **Ветку удаляй сразу после мержа** (`--delete-branch` или кнопка Delete).
-5. **Коммиты и сообщения — чистые** (без «claude»/следов). Через `commit.sh`/`deliver.sh`
-   это обеспечивается автоматически; в обход рельсов — не ходить.
+1. **ВСЕГДА `git fetch` перед merge.** Используй ОДИН интеграционный клон; не плоди клоны
+   (расхождение = лишние мерж-коммиты — ровно то, что уже случалось).
+2. **Фича → `develop`, никогда напрямую в `main`.**
+3. **`deliver.sh` / push / merge / delete — только человек.** Агенту это запрещено рельсами.
+4. **Ветку удаляй сразу после мержа** (после `main`, либо после `develop`, если больше не нужна).
+5. `--ff-only` при подтягивании `develop`/`main` ловит случайные петли: если ругается —
+   клон разошёлся с origin, выровняй его (`git reset --hard origin/<branch>` в чистом клоне) и повтори.
+6. **Коммиты и сообщения — чистые** (без «claude»/следов). Через `deliver.sh` скан это гарантирует;
+   в обход — не ходить.
+
+---
+
+## Альтернатива: полностью «голый git» (без `deliver.sh`) — на твою ответственность
+
+Если хочешь вынести ветку тоже обычным git — забери её из workspace-bare напрямую в свой клон и
+запушь:
+```bash
+cd ~/cbook-int
+git fetch /Users/dmitry/server/sites/study-cbook-ai/.repos/cbook.git feat/<slug>:feat/<slug>
+git push origin feat/<slug>
+```
+⚠️ **Это обходит скан следов ИИ** (`deliver.sh` его делает, обычный push из твоего клона — нет).
+Применяй, только если уверен в чистоте ветки. Дальше — §2–§4 как обычно.
