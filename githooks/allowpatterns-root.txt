@@ -30,3 +30,6 @@ xxxx+
 ^diff --git .*(ai/|ai/ops/security-rails\.md)
 # документация детектора: цепочка ключевых слов через =/  (напр. =/SECRET_KEY=/TOKEN=) — не реальный секрет
 =/(password|passwd|secret_key|secret|api_key|apikey|token|access_key)[[:space:]]*=
+
+# --- хеши/SHA lock-файлов (composer.lock, package-lock.json): контент-адресуемые, не секреты ---
+"(reference|content-hash|shasum|integrity)": *"[0-9a-f]{32,}"

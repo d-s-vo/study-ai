@@ -1,0 +1,13 @@
+{
+  "updated": "2026-07-29T11:19:42Z",
+  "repos": {
+    "cbook": {
+      "type": "bare",
+      "base": "develop",
+      "base_local": "9f4b857",
+      "base_origin": "9f4b857",
+      "behind": 0,
+      "tasks": {}
+    }
+  }
+}
