@@ -82,6 +82,7 @@
   - [x] ~~Задача — enterprise-барьеры / активация Pint (FEAT-003)~~ — DONE (коммит `2038821`, доставка за владельцем).
   - [x] ~~Фронт-скелет (Breeze Inertia/Vue/TS) + enterprise-рефактор авторизации (FEAT-004)~~ — DONE (коммит `e0c8ee3`, доставка за владельцем).
   - [ ] Задача 1b и далее — домен Recipe/Ingredient, миграции MySQL 8, Filament 5, media.
+  - [ ] Долг (advisory ревью FEAT-004, `e0c8ee3-review.md`): `HandleInertiaRequests` отдаёт в Inertia сырую модель `User` (STRICT RULE 4 «только DTO наружу») — обернуть в DTO (Spatie Data) в доменной фазе.
 - [ ] Уточнить у владельца: CI на `develop` (настроен ли pipeline); дисковый драйвер для `whyme-agency/laravel-media` (локальный/S3) — `(уточнить)`.
 - [x] ~~Финальный выбор СУБД~~ — снят ТЗ: **MySQL 8** (Sail-сервис `mysql`, порт 3306).
 
