@@ -59,7 +59,7 @@
 **Дата последнего обновления:** 2026-07-30
 **Текущая среда:** локальная разработка (Laravel Sail / Docker через OrbStack; MySQL 8, сервис `mysql:3306`); интеграционная ветка — `develop`
 **Основной фокус:** запущено переписывание cbook на Laravel. **FEAT-002 (greenfield-скелет 1a) — DONE** + **FEAT-003 (активация Pint / строгая типизация по базе) — DONE**: enterprise-каркас слоёв (`BaseTask`/`BaseRepository`, Data/Tasks/Resolvers) и QA-тулчейн (Pint psr12+strict, Larastan L10, Pest arch-барьер) заложены и **реально работают** — вскрыт и починен дефект FEAT-002 (конфиг Pint был `.pint.json`, молча инертен → `git mv` в `pint.json`). Легаси Nuxt 4 вынесен в `local/legacy_nuxt/` (донор идеи+BVI, не образец для порта).
-**Следующее:** доставка FEAT-002 (`9f4b857`), FEAT-003 (`2038821`) и **FEAT-004 (`e0c8ee3`, фронт-скелет + auth)** в git клиента — за владельцем (`deliver.sh cbook feat/breeze-inertia-auth` → PR в `develop`). Далее — домен Recipe/Ingredient (миграции MySQL 8, модель→Repository→DTO→Task→Resolver→Inertia), Filament 5, media. При старте крупной инициативы — включить process-retro (M7).
+**Следующее:** FEAT-004 (`e0c8ee3`) **доставлена и влита** в `origin/develop` + `origin/main` (merge `3e42757`); worktree/бронь убраны. Далее — домен Recipe/Ingredient (миграции MySQL 8, модель→Repository→DTO→Task→Resolver→Inertia), Filament 5, media. При старте крупной инициативы — включить process-retro (M7).
 
 ---
 

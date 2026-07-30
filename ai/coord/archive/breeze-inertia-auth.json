@@ -1,0 +1,19 @@
+{
+  "slug": "breeze-inertia-auth",
+  "feat": "FEAT-004",
+  "adr": null,
+  "repo": "cbook",
+  "branch": "feat/breeze-inertia-auth",
+  "status": "merged",
+  "agent": "manual-40804",
+  "account": "default",
+  "index": 1,
+  "ports": {
+    "backend": 8110,
+    "frontend": 5183,
+    "aux": 3110
+  },
+  "redis_db": 5,
+  "created": "2026-07-30T08:34:21Z",
+  "updated": "2026-07-30T14:24:45Z"
+}
