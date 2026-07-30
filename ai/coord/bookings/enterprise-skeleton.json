@@ -1,0 +1,19 @@
+{
+  "slug": "enterprise-skeleton",
+  "feat": "FEAT-003",
+  "adr": null,
+  "repo": "cbook",
+  "branch": "feat/enterprise-skeleton",
+  "status": "verify",
+  "agent": "manual-95485",
+  "account": "default",
+  "index": 1,
+  "ports": {
+    "backend": 8110,
+    "frontend": 5183,
+    "aux": 3110
+  },
+  "redis_db": 5,
+  "created": "2026-07-30T05:56:52Z",
+  "updated": "2026-07-30T06:26:57Z"
+}
