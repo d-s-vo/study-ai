@@ -4,7 +4,7 @@
   "adr": null,
   "repo": "cbook",
   "branch": "feat/enterprise-skeleton",
-  "status": "verify",
+  "status": "merged",
   "agent": "manual-95485",
   "account": "default",
   "index": 1,
@@ -15,5 +15,5 @@
   },
   "redis_db": 5,
   "created": "2026-07-30T05:56:52Z",
-  "updated": "2026-07-30T06:26:57Z"
+  "updated": "2026-07-30T07:04:42Z"
 }
