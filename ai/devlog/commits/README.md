@@ -101,3 +101,4 @@ git show <hash> | git patch-id --stable
 | repo | short-hash | FEAT | вердикт | blocker закрыты? | дата ревью | файл |
 |------|-----------|------|---------|-------------------|------------|------|
 | | | | | | | |
+| cbook | e0c8ee3 | FEAT-004 | PASS | — | 2026-07-30 | `cbook/e0c8ee3-review.md` |
