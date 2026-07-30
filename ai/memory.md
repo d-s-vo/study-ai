@@ -59,7 +59,7 @@
 **Дата последнего обновления:** 2026-07-30
 **Текущая среда:** локальная разработка (Laravel Sail / Docker через OrbStack; MySQL 8, сервис `mysql:3306`); интеграционная ветка — `develop`
 **Основной фокус:** запущено переписывание cbook на Laravel. **FEAT-002 (greenfield-скелет 1a) — DONE** + **FEAT-003 (активация Pint / строгая типизация по базе) — DONE**: enterprise-каркас слоёв (`BaseTask`/`BaseRepository`, Data/Tasks/Resolvers) и QA-тулчейн (Pint psr12+strict, Larastan L10, Pest arch-барьер) заложены и **реально работают** — вскрыт и починен дефект FEAT-002 (конфиг Pint был `.pint.json`, молча инертен → `git mv` в `pint.json`). Легаси Nuxt 4 вынесен в `local/legacy_nuxt/` (донор идеи+BVI, не образец для порта).
-**Следующее:** доставка FEAT-002 (`9f4b857`) и FEAT-003 (`2038821`) в git клиента — за владельцем (`deliver.sh cbook feat/laravel-skeleton` и `deliver.sh cbook feat/enterprise-skeleton` → PR в `develop`). Далее — задача 1b/следующие шаги переписывания (домен Recipe/Ingredient, миграции MySQL 8, Filament 5, Inertia/Vue, media). При старте крупной инициативы — включить process-retro (M7).
+**Следующее:** доставка FEAT-002 (`9f4b857`), FEAT-003 (`2038821`) и **FEAT-004 (`e0c8ee3`, фронт-скелет + auth)** в git клиента — за владельцем (`deliver.sh cbook feat/breeze-inertia-auth` → PR в `develop`). Далее — домен Recipe/Ingredient (миграции MySQL 8, модель→Repository→DTO→Task→Resolver→Inertia), Filament 5, media. При старте крупной инициативы — включить process-retro (M7).
 
 ---
 
@@ -71,6 +71,7 @@
 - **Инициализация базы знаний `ai/`** (2026-07-28): развёрнута двухконтурная система (study-cbook-ai вне кода клиента). Профиль: M1/M2/M6 ON, M7 отложен, M3/M4/M5/M8/M9 off. Зафиксированы стартовые ADR-002/003/006.
 - **FEAT-002 — greenfield-скелет Laravel 12 (задача 1a)** (2026-07-29): в `feat/laravel-skeleton` (коммит `9f4b857`) развёрнут чистый Laravel **12.64** (pinned) / PHP **8.4.23** / MySQL 8 через Sail (OrbStack). Enterprise-каркас: `app/Tasks/BaseTask.php` (`handle(): mixed`), `app/Data/Repositories/BaseRepository.php`, пустые слои `app/Data/`, `app/Resolvers/Page/` (`.gitkeep`). QA-инварианты: Pint (psr12 + `declare_strict_types`), Larastan **L10** (No errors), Pest **arch-барьер** изоляции Eloquent/DB по слоям (доказан red→green). Пакеты: `spatie/laravel-data` (prod); larastan/pest (dev). Legacy Nuxt → `local/legacy_nuxt/`. Детали — `devlog/features/FEAT-002-laravel-skeleton/impl.md`; разбор коммита — `devlog/commits/cbook/9f4b857-laravel-skeleton.md`. Исполнение под ADR-002/003/006, новых ADR не вводит. Доставка в git клиента — за владельцем. ⚠ Правка: заявленный тут Pint psr12+strict фактически был инертен — исправлено FEAT-003.
 - **FEAT-003 — активация Pint / строгая типизация по базе** (2026-07-30): в `feat/enterprise-skeleton` (коммит `2038821`) вскрыт и починен дефект FEAT-002 — конфиг Pint назывался `.pint.json` (с точкой), Pint автообнаруживает только `pint.json` → правила `psr12`+`declare_strict_types` **молча не применялись**, часть framework-кода была без `strict_types`. Починка: `git mv .pint.json → pint.json` + `sail bin pint` по всей базе (29 файлов, +62/−8, только форматирование). Доказано: Larastan **L10** No errors без baseline; Pest arch-барьер red→green (PoC с DummyTask); полный pest **4 passed**. Детали — `devlog/features/FEAT-003-enterprise-skeleton/impl.md`; разбор — `devlog/commits/cbook/2038821-enterprise-skeleton.md`. Новых ADR не вводит. Доставка в git клиента — за владельцем.
+- **FEAT-004 — фронт-скелет (Breeze Inertia/Vue/TS) + enterprise-рефактор авторизации** (2026-07-30): в `feat/breeze-inertia-auth` (коммит `e0c8ee3`) поверх скелета развёрнут фронт-стек через Laravel **Breeze** (`breeze:install vue --typescript --pest`): Inertia.js + Vue 3 (`<script setup>`, TS strict) + Vite + Tailwind; Node-менеджер — **pnpm**. Сгенерированные Breeze контроллеры Auth приведены к слоям: любые мутации `User` (регистрация/сброс+смена пароля/апдейт+удаление профиля) вынесены в новый `app/Data/Repositories/UserRepository.php` (`final`, единственное место Eloquent по User); регистрация — через `app/Tasks/RegisterUserTask.php`. Граница контракта: контроллеры/Task оперируют `Authenticatable`, `App\Models\User` живёт только в репозитории (`assert($u instanceof User)` сужает тип для L10). Arch-барьер red→green доказан (2-й нарушитель — `ProfileUpdateRequest`, тоже вычищен). Гейты: Pest **33 passed** (0 fail/skip), PHPStan **L10 No errors** (baseline 8 строк — только нетронутый Breeze-scaffold, наши файлы чисты), Pint pass, `pnpm build` ✓. Живая приёмка: register→dashboard, login/logout, guest→login. **Зафиксирован канон Task** (см. Gotchas). Детали — `devlog/features/FEAT-004-breeze-inertia-auth/impl.md`; разбор — `devlog/commits/cbook/e0c8ee3-breeze-inertia-auth.md`. Новых ADR не вводит. Доставка — за владельцем.
 
 ---
 
@@ -79,7 +80,8 @@
 - [ ] Переписывание cbook с нуля на Laravel 12 + Filament 5 + Inertia/Vue ради обучения (крупная инициатива, ADR-006; Nuxt = донор идеи+BVI). При старте — включить process-retro (M7).
   - [x] ~~Задача 1a — greenfield-скелет (FEAT-002)~~ — DONE (коммит `9f4b857`, доставка за владельцем).
   - [x] ~~Задача — enterprise-барьеры / активация Pint (FEAT-003)~~ — DONE (коммит `2038821`, доставка за владельцем).
-  - [ ] Задача 1b и далее — домен Recipe/Ingredient, миграции MySQL 8, Filament 5, Inertia/Vue, media.
+  - [x] ~~Фронт-скелет (Breeze Inertia/Vue/TS) + enterprise-рефактор авторизации (FEAT-004)~~ — DONE (коммит `e0c8ee3`, доставка за владельцем).
+  - [ ] Задача 1b и далее — домен Recipe/Ingredient, миграции MySQL 8, Filament 5, media.
 - [ ] Уточнить у владельца: CI на `develop` (настроен ли pipeline); дисковый драйвер для `whyme-agency/laravel-media` (локальный/S3) — `(уточнить)`.
 - [x] ~~Финальный выбор СУБД~~ — снят ТЗ: **MySQL 8** (Sail-сервис `mysql`, порт 3306).
 
@@ -110,6 +112,7 @@
 - **Legacy-референс → `local/legacy_nuxt/`, НЕ в клиентский worktree.** Клиентский worktree = только актуальный код (двухконтурная модель). `local/` игнорируется в study-cbook-ai и вне любого worktree → ноль риска утечки legacy в клиентский коммит. Не добавлять `/legacy_*/` в клиентский `.gitignore` (папки там нет). Старый код всё равно отражается в git как удаления.
 - **Секрет-детектор pre-commit ловит хеши `composer.lock` (и `package-lock.json`) как секреты** — ложное срабатывание на `content-hash`/`reference`/`shasum` (32/40 hex). Гасится узким allow-паттерном в `githooks/allowpatterns-root.txt` (`secret_allowed`). Правит **только владелец** — обвязка блокирует запись агентом (Edit/Write и, по духу, Bash). Реальные `PASSWORD=`/`TOKEN=`/AWS-ключи по-прежнему ловятся.
 - **Docker-демон — OrbStack** (не Docker Desktop). `docker context` = `orbstack`; поднять — `open -a OrbStack`. Sail работает поверх без изменений.
+- **Канон Task: пустой `BaseTask` + `run($данные)` + `final readonly` (стиль Actions).** База (`BaseTask`/`BaseRepository`) — пустой abstract-ярлык слоя: единую сигнатуру метода в предке зафиксировать нельзя (у разных Task-ов разные вводные → PHP fatal при переопределении метода с добавленными обязательными аргументами). Конкретный Task: `final`, зависимости `private readonly` в конструкторе (DI Laravel подставляет), данные операции — аргументы метода **`run()`** (не `handle()`). Выверено по north-star референсу `listvafitness` (студия whyme-agency): в `vendor/whyme-agency/laravel-foundation` `AbstractTask`/`AbstractRepository` пусты, Task-и объявляют `run($данные)` с `final readonly`. Историческое `BaseTask::handle(): mixed` из FEAT-002 отменено FEAT-004 (`e0c8ee3`).
 - **Pint читает только `pint.json` (без точки) — `.pint.json` молча игнорируется.** Дотовый файл не автообнаруживается: Pint тихо гоняет дефолтный пресет `laravel`, а заданные `preset`/`rules` (в т.ч. `declare_strict_types`) не применяются. Симптом: «pint отработал без ошибок», но strict_types не проставлен. Проверка: `pint` без `--config` в шапке пишет пресет `Laravel`; с `--config <файл>` — `PSR 12` → автодетект не сработал. Родом из FEAT-002, починено FEAT-003 (`2038821`).
 
 ---
@@ -118,7 +121,7 @@
 
 > Опциональные сквозные счётчики (следующий свободный FEAT-номер, последний ADR и т.п.) — чтобы не сверяться каждый раз вручную.
 
-- Следующий свободный FEAT: FEAT-004 (FEAT-002 = greenfield-скелет done 2026-07-29; FEAT-003 = активация Pint/strict done 2026-07-30)
+- Следующий свободный FEAT: FEAT-005 (FEAT-004 = фронт-скелет Breeze + enterprise-рефактор авторизации done 2026-07-30, `e0c8ee3`)
 - Последний ADR: 010 (системный); последний продуктовый — 006; следующий свободный продуктовый — 007
 
 ---

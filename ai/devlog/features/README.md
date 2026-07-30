@@ -33,6 +33,7 @@ FEAT-NNN-slug/
 | FEAT-001 | `feat/example-slug` | cbook | done (пример строки) | 0000000 | пример: короткое описание сделанного |
 | FEAT-002 | `feat/laravel-skeleton` | cbook | done (у владельца — deliver) | 9f4b857 | greenfield-скелет Laravel 12 + enterprise-слои + QA-тулчейн |
 | FEAT-003 | `feat/enterprise-skeleton` | cbook | done (у владельца — deliver) | 2038821 | активация конфига Pint (`.pint.json`→`pint.json`) + strict_types/psr12 по базе |
+| FEAT-004 | `feat/breeze-inertia-auth` | cbook | 🚧 передано владельцу (deliver) | e0c8ee3 | Breeze (Inertia/Vue3/TS/Tailwind) + enterprise-рефактор авторизации: мутации User только через `UserRepository`/`RegisterUserTask` |
 <!-- FEAT-MAP:END -->
 
 > Строки таблицы — `⚙️ RUNTIME`: append-only, пишутся `scripts/feat-map.sh` (или вручную под
