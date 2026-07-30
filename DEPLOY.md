@@ -43,7 +43,7 @@ git push origin develop                  # на ветке: develop — запу
 git switch main                          # → теперь на ветке: main
 git branch --show-current                # проверь: main (перед reset --hard!)
 git reset --hard origin/main             # на ветке: main — выровнять с origin
-git merge origin/develop                 # на ветке: main — влить develop
+git merge origin/develop -m 'merge develop in master'    # на ветке: main — влить develop
 git push origin main                     # на ветке: main — прод-деплой
 
 # --- уборка ветки на GitHub ---
