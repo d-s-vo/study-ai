@@ -14,7 +14,7 @@ resolved_by: [cc3df94]
 
 # cbook@74fe7ab — REVIEW — chore: поднять redis и mailpit, выровнять окружение под mysql и завести CI
 
-**Verdict:** PASS (итог цепочки 74fe7ab + фикс cc3df94; исходный вердикт коммита был FAIL — см. журнал)
+**Verdict:** PASS (итог цепочки 74fe7ab + фикс cc3df94 + 1ff25df; исходный вердикт коммита был FAIL — см. журнал)
 **Blocking findings (исходные, закрыты):**
 - `.github/workflows/ci.yml:74` и `:99` — `uses: pnpm/action-setup@v4` **без входа `version:`**, при
   этом `package.json` **не содержит поля `packageManager`** (проверено: `json.load` → `packageManager=None`,
@@ -101,6 +101,11 @@ develop; критический путь — деливери-гейт фичи)
   `pnpm install --frozen-lockfile` был на pnpm 10.30.3, тот же мажор); (в) регрессий нет — диф строго
   2×2 строки, стоп-словарь по дифу чист, сообщение conventional. FAIL-veto снят исходным ревьюером
   → итог цепочки PASS. Ревью фикс-коммита: `cc3df94-review.md` (рядом).
+- Дополнение ветки: коммит `1ff25df` (`ci: прогонять линт и проверку типов фронтенда`) — узкое ревью
+  PASS (`1ff25df-review.md`): шаги `pnpm run --if-present lint|typecheck` в job `frontend`, no-op до
+  появления скриптов доказан живым прогоном (pnpm 10.30.3, exit 0 / контроль без флага exit 1).
+  Итог цепочки 74fe7ab+cc3df94+1ff25df — **PASS**; процессная нота: разбор ADR-009 для 1ff25df — за
+  автором до merge.
 - Non-blocking (mailpit healthcheck / `pnpm dlx` / дубль build) → nit, закрытия не требуют.
 
 ## Связи
