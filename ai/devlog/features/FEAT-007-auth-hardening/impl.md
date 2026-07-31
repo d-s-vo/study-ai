@@ -10,7 +10,8 @@ prevention: 'регрессионные throttle-тесты (429 после ли
 
 ## Статус: DONE (передано оркестратору/пользователю на доставку)
 ## Дата: 2026-07-31
-## Коммит: `a1f6c53` (ветка `feat/auth-hardening` от `origin/develop @ e0c8ee3`)
+## Коммиты (цепочка): `a1f6c53` (фича) + `f4a9d63` (`feat: включить обязательное подтверждение email при регистрации` — закрытие блокера ревью по spec-дельте владельца) + `6605919` (`docs: отметить обязательное подтверждение email в инструкции запуска` — README, по согласованию)
+## Ветка: `feat/auth-hardening` от `origin/develop @ e0c8ee3`
 
 ## Step-0 — вердикт свежести базиса
 База свежая: `HEAD == merge-base(HEAD, origin/develop) == e0c8ee3`. Расхождений нет, rebase не требуется.
@@ -43,19 +44,37 @@ STRICT сохранён: мутации `User` остаются в `UserReposito
 FormRequest→делегирование. `use Illuminate\Validation\Rules`/лишние `Request`-импорты вычищены.
 
 ### 3. Снятие PHPStan-baseline (8 записей — все по коду, файл удалён)
-- **7× nullable `$request->user()`** — сужение в стиле `ProfileController` (`$user = $request->user(); assert(...)`):
-  `ConfirmablePasswordController` (`assert($user !== null)`), `EmailVerificationNotificationController`,
-  `EmailVerificationPromptController`, `VerifyEmailController`.
-  Для `new Verified($user)` — `assert($user instanceof MustVerifyEmail)` (конструктор события ждёт контракт
-  `MustVerifyEmail`; `App\Models\User` не `final`, поэтому пересечение `User&MustVerifyEmail` для PHPStan
-  допустимо и покрывает и `hasVerifiedEmail()`/`markEmailAsVerified()`, и аргумент события).
+- **nullable `$request->user()`** — сужение в стиле `ProfileController` (`$user = $request->user();
+  assert($user !== null)`): `ConfirmablePasswordController`, `EmailVerificationNotificationController`,
+  `EmailVerificationPromptController`. Все три — под `auth`-middleware, предикат всегда-истинный.
+- **`VerifyEmailController`** — итоговое решение (после фикса `f4a9d63`): контроллер сведён к штатному
+  `$request->fulfill()` (`EmailVerificationRequest::fulfill()` — тот же канон, что в Fortify) + redirect.
+  Обращения к `$request->user()` и каких-либо assert/сужений в контроллере нет вовсе.
+  ⚠ История блокера: в `a1f6c53` здесь стоял `assert($user instanceof MustVerifyEmail)` — предикат был
+  **ложен в рантайме** (модель подключала только одноимённый трейт, не контракт); при `zend.assertions=1`
+  (дефолт php.ini-development) это дало бы AssertionError→500. Sail с `zend.assertions=-1` маскировал.
+  Урок: assert-сужение допустимо только со всегда-истинным предикатом.
 - **1× Stringable→string** (`LoginRequest::throttleKey()`) — `Str::lower((string) $this->string('email'))`.
 - `phpstan-baseline.neon` удалён; строка `- phpstan-baseline.neon` убрана из `includes` в `phpstan.neon`.
 
-> Рантайм-безопасность `assert(...)`: в Sail-контейнере `zend.assertions => -1` — `assert()` скомпилирован в no-op,
-> служит **только** для сужения типов PHPStan (тот же приём, что уже в `ProfileController`/`UserRepository`
-> из FEAT-004). Поэтому `assert($user instanceof MustVerifyEmail)` в дремлющем verification-flow (наш `User`
-> не реализует контракт) рантайм не ломает — подтверждено живым прогоном `verify-email` через тесты.
+> Все оставшиеся в цепочке assert-сужения — всегда-истинные (`!== null` под `auth`; `instanceof User` в
+> `UserRepository` из FEAT-004). **Доказательство:** полный Pest-прогон с принудительным
+> `php -d zend.assertions=1 -d assert.exception=1` — 39 passed, ни одного AssertionError.
+
+### 3b. Email-верификация (spec-дельта владельца, коммит `f4a9d63`)
+Владелец решил не консервировать дремлющий флоу, а включить верификацию по-настоящему (см. spec.md §Дельта):
+- `app/Models/User.php` — `implements Illuminate\Contracts\Auth\MustVerifyEmail` (методы уже были через трейт
+  базового класса); убран Breeze-комментарий-подсказка.
+- Последствия включения (проверены): `Registered` → фреймворковый листенер `SendEmailVerificationNotification`
+  (регистрируется автоматически, `Foundation\Support\Providers\EventServiceProvider:226`) шлёт письмо;
+  middleware `verified` на dashboard становится боевым — неверифицированный редиректится на
+  `verification.notice`.
+- Слои не тронуты: `RegisterUserTask`/`UserRepository` без изменений (мутаций модели дельта не требует).
+- Новые тесты: `RegistrationTest` — «a verification email is sent on registration» (`Notification::fake` +
+  `VerifyEmail`, юзер после регистрации не верифицирован); `EmailVerificationTest` — «unverified users are
+  redirected to the verification notice» и «verified users can access the dashboard». Существовавшие
+  `EmailVerificationTest`-кейсы не были вакуумными по механике verify-роута (трейт-методы работали и до
+  контракта), но middleware `verified` до дельты был инертен — теперь покрыт явными тестами.
 
 ### 4. Регрессионные тесты (`tests/Feature/Auth/AuthThrottleTest.php`)
 Три кейса: register / forgot-password / reset-password — 6× запросов проходят (302), 7-й → **429**.
@@ -65,10 +84,13 @@ FormRequest→делегирование. `use Illuminate\Validation\Rules`/ли
 негативные кейсы неверного `current_password` при смене/удалении) остались зелёными без правок — переход на
 FormRequest не изменил ключи ошибок/redirect.
 
-## Гейты (все зелёные)
-- **Pest (полный, через `gate.sh backend-tests`):** **36 passed** (101 assertions) — было 33, +3 throttle-регрессии. 0 fail/skip.
-- **PHPStan L10 БЕЗ baseline (`sail bin phpstan analyse`):** **No errors** (ключевой AC — 8 подавлений сняты по коду).
-- **Pint (`sail bin pint --test`):** `passed`.
+## Гейты (все зелёные; итог цепочки a1f6c53+f4a9d63)
+- **Pest (полный, через `gate.sh backend-tests`):** **39 passed** (106 assertions) — было 33, +3 throttle,
+  +3 верификация. 0 fail/skip. Прогон выполнен с `php -d zend.assertions=1 -d assert.exception=1` —
+  одновременно доказательство всегда-истинности всех assert-предикатов.
+- **PHPStan L10 БЕЗ baseline (`sail bin phpstan analyse`):** **No errors** (ключевой AC — 8 подавлений сняты
+  по коду; после фикса — без единого assert-обмана).
+- **Pint (`sail bin pint --test`):** `passed`. Арх-барьер (изоляция Eloquent) — в составе Pest, зелёный.
 - **Frontend build (`gate.sh frontend-build` → `pnpm build`):** зелёный, `public/build/manifest.json` собран
   (фронт не трогался; сборка не регрессировала).
 
@@ -85,6 +107,13 @@ FormRequest не изменил ключи ошибок/redirect.
 - **Throttle (фактический 429):** после `cache:clear`, 7× `POST /forgot-password`: попытки **1–6 → 302, 7-я → 429**
   (ровно `throttle:6,1`).
 
+**Вторая живая приёмка (после `f4a9d63`, верификация; тот же изолированный стенд, снят после):**
+- register → 302 `/dashboard` → middleware `verified` → 302 `/verify-email`; notice-страница → 200;
+- письмо верификации реально уходит (log-mailer): signed-ссылка `verify-email/{id}/{hash}` извлечена из лога,
+  GET по ней → 302 → `/dashboard` → **200** (верифицирован); повторный `/verify-email` → 302 на dashboard;
+- второй (неверифицированный) пользователь: login → 302, `/dashboard` → 302 `/verify-email` (блок работает);
+- throttle-регресс: 7× `POST /forgot-password` → попытки 1–6 302, **7-я 429** (не сломан).
+
 ## Отклонения / замечания для оркестратора
 1. **pnpm `allowBuilds` (тот же паттерн, что в FEAT-004).** В свежем worktree под pnpm 11.18 `onlyBuiltDependencies`
    уже недостаточно: сборка esbuild гейтится новым полем `allowBuilds`; без него `pnpm build` падает на deps-status-check.
@@ -94,13 +123,22 @@ FormRequest не изменил ключи ошибок/redirect.
 2. **Mailpit отсутствует в compose.yaml проекта** (только `laravel.test`+`mysql`) — живой сброс проверен через
    log-mailer + парсинг лога (эквивалент по сути: реальное отрендеренное письмо с рабочей ссылкой). Если целевой
    локальный стенд должен включать Mailpit/redis — это отдельный infra-вопрос.
-3. **User-visible:** превышение лимита → 429 с сообщением о лимите. Незначительно для конечного пользователя;
-   правки публичной доки не требуются (соответствует §Пользовательская документация spec).
+3. **User-visible (обновлено дельтой):** (а) превышение лимита → 429; (б) **регистрация теперь требует
+   подтверждения email** — после register пользователь попадает на notice-страницу, dashboard доступен после
+   клика по ссылке из письма. По согласованию отражено в README клиента (docs-коммит `6605919`, строка в
+   секции локального запуска рядом с упоминанием Mailpit).
+4. **Блокер ревью a1f6c53 закрыт по существу** (`f4a9d63`): ложное сужение `instanceof MustVerifyEmail`
+   устранено не заплаткой, а внедрением верификации (решение владельца) + переводом контроллера на штатный
+   `fulfill()`. Ложных в рантайме assert-ов в цепочке не осталось — доказано полным Pest-прогоном под
+   `zend.assertions=1`.
 
 ## Файлы
-Изменены: `routes/auth.php`, `phpstan.neon`, `app/Http/Requests/Auth/LoginRequest.php`,
+Коммит `a1f6c53`: изменены `routes/auth.php`, `phpstan.neon`, `app/Http/Requests/Auth/LoginRequest.php`,
 `app/Http/Controllers/Auth/{RegisteredUser,NewPassword,PasswordResetLink,Password,ConfirmablePassword,
 EmailVerificationNotification,EmailVerificationPrompt,VerifyEmail}Controller.php`,
-`app/Http/Controllers/ProfileController.php`.
-Добавлены: 5 FormRequest (см. таблицу), `tests/Feature/Auth/AuthThrottleTest.php`.
-Удалён: `phpstan-baseline.neon`.
+`app/Http/Controllers/ProfileController.php`; добавлены 5 FormRequest (см. таблицу),
+`tests/Feature/Auth/AuthThrottleTest.php`; удалён `phpstan-baseline.neon`.
+Коммит `f4a9d63`: изменены `app/Models/User.php` (implements `MustVerifyEmail`),
+`app/Http/Controllers/Auth/VerifyEmailController.php` (→ `fulfill()`),
+`tests/Feature/Auth/RegistrationTest.php` (+1 тест), `tests/Feature/Auth/EmailVerificationTest.php` (+2 теста).
+Коммит `6605919`: `README.md` (+3 строки — user-visible заметка о подтверждении email, Mailpit).

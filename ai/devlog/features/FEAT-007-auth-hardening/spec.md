@@ -109,5 +109,26 @@ User-visible изменение поведения: превышение поп�
 - Фронт-гигиена, ESLint/tsconfig, чистка скаффолда, Tailwind (FEAT-008).
 - Новые auth-фичи (2FA, соц-логин), политики Filament — вне скоупа.
 
+## Дельта: email-верификация (решение владельца 2026-07-31)
+
+Принято при закрытии блокера ревью `a1f6c53` (ложное в рантайме сужение `assert($user instanceof MustVerifyEmail)`
+в `VerifyEmailController` — `App\Models\User` подключал лишь одноимённый трейт, но не контракт). Владелец решил
+не консервировать дремлющий флоу, а **внедрить верификацию email по-настоящему**:
+
+- `App\Models\User implements Illuminate\Contracts\Auth\MustVerifyEmail` (методы уже есть через трейт базового
+  `Foundation\Auth\User`).
+- `VerifyEmailController` — через штатный `EmailVerificationRequest::fulfill()` (канон Fortify): без обращения
+  к `$request->user()` в контроллере, без сужений/assert вовсе.
+- Осознанные последствия включения (ожидаемое новое поведение):
+  - `Registered` → фреймворковый листенер `SendEmailVerificationNotification` шлёт письмо верификации;
+  - middleware `verified` (dashboard) начинает работать: неверифицированный → redirect на `verification.notice`;
+    после подтверждения по ссылке из письма — dashboard.
+- AC дельты: регрессия «письмо при регистрации отправляется» (`Notification::fake` + `VerifyEmail`);
+  «неверифицированный не попадает на dashboard» (redirect на notice); «верифицированный проходит»;
+  существующие `EmailVerificationTest` становятся содержательными (middleware `verified` теперь боевой).
+- Слои НЕ трогаются: `RegisterUserTask`/`UserRepository` без изменений — меняется только модель + тесты.
+- Живая приёмка обязательна (поведение auth меняется): register → notice; ссылка из письма → верификация →
+  dashboard; вход неверифицированным → notice; throttle-регресс остаётся зелёным.
+
 ## Оценка сложности
 Средняя. Риски: (1) throttle-тесты чувствительны к состоянию RateLimiter между тестами (изолировать/чистить лимитер, чтобы не флейкать); (2) сужение nullable-user не должно менять рантайм-поведение verification-flow (маршруты под `auth` — user есть, но проверить edge с `MustVerifyEmail`); (3) переход на FormRequest не должен сломать redirect/ошибки существующих Breeze-тестов.
