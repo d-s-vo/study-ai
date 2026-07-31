@@ -77,6 +77,21 @@ _feat_max() {
     printf '%s\n' "$_fm"
 }
 
+# _feat_dirs_max — максимальный FEAT-номер по ФАКТУ: папки ai/devlog/features/FEAT-NNN-*.
+# Независимый от реестров источник (папку создаёт spec-фаза фичи). Используется как
+# кросс-проверка в book: реестры (таблица+брони) не могут отставать от факта.
+_feat_dirs_max() {
+    _fdm=0
+    for _d in "$WS_ROOT/ai/devlog/features"/FEAT-[0-9]*; do
+        [ -d "$_d" ] || continue
+        _n="$(basename "$_d" | sed -E 's/^FEAT-0*([0-9]+).*/\1/')"
+        case "$_n" in ''|*[!0-9]*) continue ;; esac
+        _n=$(( 10#$_n ))
+        [ "$_n" -gt "$_fdm" ] && _fdm="$_n"
+    done
+    printf '%s\n' "$_fdm"
+}
+
 # _adr_max — максимальный ADR-номер из ai/adr/*.md + всех броней/архива.
 _adr_max() {
     _am=0
@@ -258,6 +273,18 @@ cmd_book() {
         coord_unlock booking; trap - EXIT INT TERM
         die "нумерация FEAT недоступна — почините таблицу в ai/devlog/features/README.md (подробности выше)."
     fi
+    # Кросс-проверка реестров против факта: папки FEAT-NNN-* в devlog/features не должны
+    # уходить дальше реестров (таблица маппинга + брони/архив). Расхождение = чьё-то закрытие
+    # прошло мимо Шага 10 feature-workflow → выдача занятого номера. Чиним реестр, не игнорируем.
+    _feat_dirs_v="$(_feat_dirs_max)"
+    if [ "$_feat_dirs_v" -gt "$_feat_max_v" ]; then
+        coord_unlock booking; trap - EXIT INT TERM
+        die "реестры FEAT отстали от факта: в ai/devlog/features/ есть папка FEAT-$(printf '%03d' "$_feat_dirs_v")-*, а максимум по таблице маппинга и броням — FEAT-$(printf '%03d' "$_feat_max_v").
+     Кто-то закрыл фичу мимо Шага 10 feature-workflow. Сначала дополните реестр:
+       ./scripts/feat-map.sh add FEAT-NNN --branch <ветка> --repo <репо> --status done --commit <sha> --desc \"<что>\"
+     (по строке на каждый недостающий номер; данные — в impl.md соответствующей папки), затем повторите book."
+    fi
+
     _feat_n=$(( 10#$_feat_max_v + 1 ))
     _feat="$(printf 'FEAT-%03d' "$_feat_n")"
 
