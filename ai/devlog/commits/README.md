@@ -67,6 +67,7 @@ git show <hash> | git patch-id --stable
 |------|-----------|--------------|------|------|-------------------|--------------|------|
 | cbook | 9f4b857 | ab97c5b11fce | FEAT-002 | 2026-07-29 | feat: инициализировать скелет Laravel 12 со слоистой архитектурой и QA-тулчейном | | `cbook/9f4b857-laravel-skeleton.md` |
 | cbook | e0c8ee3 | c5173dcc4bfc | FEAT-004 | 2026-07-30 | feat: скелет фронтенда на Inertia/Vue и авторизация через слой репозиториев | | `cbook/e0c8ee3-breeze-inertia-auth.md` |
+| cbook | 74fe7ab | d108f08cd571 | FEAT-005 | 2026-07-31 | chore: поднять redis и mailpit, выровнять окружение под mysql и завести CI | | `cbook/74fe7ab-infra-toolchain.md` |
 
 ---
 
@@ -102,3 +103,4 @@ git show <hash> | git patch-id --stable
 |------|-----------|------|---------|-------------------|------------|------|
 | | | | | | | |
 | cbook | e0c8ee3 | FEAT-004 | PASS | — | 2026-07-30 | `cbook/e0c8ee3-review.md` |
+| cbook | 74fe7ab | FEAT-005 | FAIL | нет | 2026-07-31 | `cbook/74fe7ab-review.md` |
