@@ -31,6 +31,7 @@ FEAT-NNN-slug/
 | FEAT | Ветка (клиентская репа) | Репо | Статус | Коммит | Что |
 |------|-------------------------|------|--------|--------|-----|
 | FEAT-002 | feat/laravel-skeleton | cbook | done | 9f4b857 | greenfield-скелет Laravel 12 + enterprise-слои + QA-тулчейн |
+| FEAT-003 | feat/enterprise-skeleton | cbook | done | 2038821 | активация конфига Pint (pint.json) + strict_types/psr12 по базе |
 <!-- FEAT-MAP:END -->
 
 > Строки таблицы — `⚙️ RUNTIME`: append-only, пишутся `scripts/feat-map.sh` (или вручную под

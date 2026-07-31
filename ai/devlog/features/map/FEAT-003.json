@@ -1,0 +1,11 @@
+{
+  "feat": "FEAT-003",
+  "branch": "feat/enterprise-skeleton",
+  "repo": "cbook",
+  "status": "done",
+  "adr": null,
+  "commit": "2038821",
+  "desc": "активация конфига Pint (pint.json) + strict_types/psr12 по базе",
+  "created": "2026-07-31T13:15:29Z",
+  "updated": "2026-07-31T13:15:29Z"
+}
