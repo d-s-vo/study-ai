@@ -4,8 +4,8 @@
   "repo": "cbook",
   "status": "done",
   "adr": null,
-  "commit": "348396b",
-  "desc": "email-верификация, throttle register/forgot/reset, FormRequest-валидация auth",
+  "commit": "a1f6c53",
+  "desc": "auth-hardening: throttle register/forgot/reset, FormRequest-валидация, email-верификация (a1f6c53+f4a9d63+6605919)",
   "created": "2026-07-31T13:15:31Z",
-  "updated": "2026-07-31T13:15:31Z"
+  "updated": "2026-07-31T13:15:48Z"
 }
