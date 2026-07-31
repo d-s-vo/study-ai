@@ -121,3 +121,4 @@ git show <hash> | git patch-id --stable
 | cbook | 6605919 | FEAT-007 | PASS | — | 2026-07-31 | `cbook/6605919-review.md` |
 | cbook | a1f6c53 | FEAT-007 | PASS | да: f4a9d63 | 2026-07-31 | `cbook/a1f6c53-review.md` |
 | cbook | c48543f | FEAT-009 | PASS | — | 2026-07-31 | `cbook/c48543f-review.md` |
+| cbook | 73050e3 | FEAT-009 | PASS | — | 2026-07-31 | `cbook/73050e3-review.md` |
