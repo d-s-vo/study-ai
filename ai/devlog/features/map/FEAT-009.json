@@ -1,0 +1,11 @@
+{
+  "feat": "FEAT-009",
+  "branch": "feat/recipe-data-layer",
+  "repo": "cbook",
+  "status": "done",
+  "adr": null,
+  "commit": "73050e3",
+  "desc": "слой данных Recipe/Ingredient: миграции (user_id, каскады), модели, Difficulty, RecipeRepository, DTO+TS-типы (c48543f+73050e3)",
+  "created": "2026-07-31T16:01:01Z",
+  "updated": "2026-07-31T16:01:01Z"
+}
