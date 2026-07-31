@@ -1,0 +1,52 @@
+---
+repo: cbook
+authored_hash: a1f6c53b45907f6525e51a0e5c1281c08f7a563e
+patch_id: e9ada681a6ca
+feat: FEAT-007
+branch: feat/auth-hardening
+reviewer_model: Opus 4.8
+review_date: 2026-07-31
+verdict: FAIL
+blockers_total: 1
+blockers_open: 1
+resolved_by: []
+---
+
+# cbook@a1f6c53 — REVIEW — feat: усилить auth — троттлинг публичных роутов, валидация во FormRequest, снятие PHPStan-baseline
+
+**Verdict:** FAIL
+**Blocking findings:**
+- `app/Http/Controllers/Auth/VerifyEmailController.php:21` — `assert($user instanceof MustVerifyEmail)` ассертит предикат, **ложный в рантайме** для фактического `App\Models\User`. Импортирован **контракт** `Illuminate\Contracts\Auth\MustVerifyEmail` (интерфейс), а `User` его **не реализует**: базовый `Illuminate\Foundation\Auth\User` объявляет `implements AuthenticatableContract, AuthorizableContract, CanResetPasswordContract` и лишь **подключает трейт** `use Illuminate\Auth\MustVerifyEmail` (даёт методы `hasVerifiedEmail()`/`markEmailAsVerified()`), но НЕ имплементит интерфейс-контракт; `App\Models\User` контракт тоже не добавляет (импорт закомментирован, `app/Models/User.php:7,13`). Значит `$user instanceof Illuminate\Contracts\Auth\MustVerifyEmail === false`. **Контрпример (достижимый auth-путь):** при `zend.assertions=1` (компилируемый дефолт PHP при отсутствии ini-переопределения; `php.ini-development`) любой аутентифицированный запрос `GET /verify-email` / подписанный `GET /verify-email/{id}/{hash}` → `assert(false)` бросает `AssertionError` → HTTP 500; коммитнутые тесты `tests/Feature/Auth/EmailVerificationTest.php` («email verification screen can be rendered» ждёт 200; «email can be verified» ждёт redirect+`Verified`) в такой среде **красные**. Это **регрессия** относительно `e0c8ee3`, где было `$request->user()->hasVerifiedEmail()` без assert — работало во всех средах. Класс §3 п.8 «Чужая среда» / memory-gotcha «зелено локально ≠ чужая среда»: локальный Sail имеет `zend.assertions=-1` (assert = no-op), поэтому impl-прогон «36 passed / живой verify-email» защиты не даёт — он маскирует дефект, а не опровергает.
+
+**Non-blocking notes:**
+- `app/Http/Controllers/Auth/VerifyEmailController.php:21` (тот же участок, отдельный аспект) — даже под `zend.assertions=-1` весь verify-email-контур фактически **спящий/нефункциональный по дизайну**: раз `User` не реализует контракт, слушатель `SendEmailVerificationNotification` писем не шлёт и `verified`-middleware нигде не навешен — обычный UX туда не заходит. Это преждевременное состояние скаффолда (pre-existing из FEAT-004), но правильный фикс блокера (`User implements MustVerifyEmail`) его активирует и **изменит поведение регистрации** (появятся письма верификации) — если это нежелательно в скоупе FEAT-007, выбрать фикс, не активирующий контур (см. «Suggested next»). Severity: minor — учесть при выборе фикса, чтобы не расширить скоуп молча.
+- `tests/Feature/Auth/AuthThrottleTest.php:8-13,16-23,26-31` — первые 6 запросов возвращают 302 из-за **провала валидации** (пустое тело / только email), а не из-за успешной обработки; тест доказывает границу троттла (6→ok, 7→429), но не «успешный путь под лимитом». Не вакуумный (снятие `throttle:6,1` → 7-й = 302 → red; смена лимита → red), покрытие достаточно для AC. Severity: nit.
+
+**Evidence:**
+- Прочитано ПЕРЕД diff (§2): `spec.md`+AC, `impl.md`, memory.md (5 STRICT, канон Task, gotcha «зелено локально ≠ чужая среда»), `_review-template.md`, разбор автора `a1f6c53-auth-hardening.md` (не трогал). `git show a1f6c53` построчно.
+- **Parity FormRequest (5/5, 1:1 к `e0c8ee3`)** — сверено `git show e0c8ee3:<путь>`: `RegisterRequest` (name/email `unique,lowercase`/password `confirmed,Password::defaults()`), `NewPasswordRequest` (token/email/password), `PasswordResetLinkRequest` (email `required|email`), `UpdatePasswordRequest` (current_password `current_password`/password), `ProfileDeleteRequest` (password `current_password`) — правила, ключи полей и порядок **идентичны** прежним инлайн-массивам; тексты ошибок/ключи не меняются → `form.errors` фронта не затронут. `authorize(): true` корректен (роуты уже под `guest`/`auth`). Контроллеры остались тонкими (FormRequest→`validated()`/делегирование), лишние импорты (`Rules`, `Request`) вычищены; в `ProfileController` `Request` сохранён (нужен `edit()`).
+- **Throttle** — `routes/auth.php`: `throttle:6,1` навешен ровно на `register`/`forgot-password`/`reset-password` POST; `login` НЕ тронут (двойного лимита нет — он под `LoginRequest::ensureIsNotRateLimited`, 5 попыток); `6,1` согласован с `verification.*`. `LoginRequest::throttleKey()` — `(string)`-каст корректен.
+- **Чужая среда / CACHE_STORE (§3 п.8)** — CI из FEAT-005 (`git show cc3df94:.github/workflows/ci.yml`, job `tests` на MySQL-сервисе) кладёт `.env.testing.example`→`.env`, где `CACHE_STORE=array`; `phpunit.xml` тоже `CACHE_STORE=array` (применяется при бутстрапе PHPUnit, Laravel-Dotenv immutable не переопределяет). Rate-limiter-кэш в CI = array, как локально → троттл-тесты **не флейкают в CI** (изоляция: пере-создание приложения и array-стора на каждый тест; накопление только внутри одного теста). Это ось §8 закрыта. НО ось §8 по `zend.assertions` — открыта (см. блокер): Sail 8.4 `php.ini` значение не задаёт (наследует дефолт образа; impl наблюдал -1), CI-раннер `shivammathur/setup-php@v2` -1 не гарантирует, а тесты verify-email этот путь активно исполняют. CI я не прогонял (нет доступа к раннеру) — но дефект доказуем из исходников без CI: предикат assert ложен, путь достижим, регрессия налицо.
+- **Снятие baseline (7/8 закрыты корректно, 1 — блокер):** `Str::lower((string) $this->string('email'))` — валидный каст ✓; `assert($user !== null)` в `ConfirmablePassword`/`EmailVerificationNotification`/`EmailVerificationPrompt` — **всегда-истинный** (auth-middleware гарантирует user), безопасен в любой среде, сужает `User|null→User`, трейт-методы доступны ✓; `phpstan.neon` — строка `- phpstan-baseline.neon` убрана из `includes`, файл удалён ✓. Единственное исключение — `instanceof MustVerifyEmail` (блокер): **всегда-ложный** предикат, в отличие от прочих семь.
+- **`new Verified($user)`** — конструктор `Illuminate\Auth\Events\Verified` объявлен `public function __construct(public $user)` **без рантайм-тайпхинта** (контракт только в `@param`-докблоке для PHPStan) → `TypeError` в рантайме НЕ бросается; единственный рантайм-ландмайн — сам `assert` строки 21. Именно нужда сузить `$user` под контракт для `Verified` и толкнула автора на ложный assert вместо `!== null`.
+- **Слои/тихие регрессии (§3.4):** register→`RegisterUserTask`, reset→`UserRepository::setPassword`, update→`UserRepository`, delete→`UserRepository::delete` — вызовы неизменны, Eloquent в контроллеры не протёк, STRICT RULE 2/3 сохранены (менялись только сигнатуры Request→FormRequest).
+- **Гигиена:** в diff следов системы/ИИ/FEAT/стоп-слов не замечено (зона Шага 12 — не дублирую); сообщение коммита — `feat: …`, conventional, без следов.
+- **Гейты локально не перепрогонял намеренно:** зелёный локальный прогон (Sail, `zend.assertions=-1`) **маскирует** блокер и не может его выявить — опора на источники надёжнее; PHPStan L10 проходит (assert сужает тип), Pest проходит (assert = no-op) — оба гейта дефект пропускают, что и есть суть находки.
+
+**Suggested next:** fix-now (в рамках FEAT-007, до merge). Направления фикса (выбор — за исполнителем по фикс-циклу §6, с учётом minor-ноты о скоупе): (а) **предпочтительно** `class User extends Authenticatable implements MustVerifyEmail` (раскомментировать `app/Models/User.php:7`) — трейт уже даёт методы, assert становится истинным, PHPStan для `new Verified($user)` доволен, контур работает во всех средах; **но** учесть, что это включит отправку писем верификации при регистрации (изменение поведения — при необходимости отразить в spec-дельте/тестах); либо (б) если активация контура вне скоупа — заменить на всегда-истинное сужение (`assert($user !== null)`) и снять оставшуюся PHPStan-претензию по `new Verified($user)` корректным способом, не сажая рантайм-ложный assert (напр. явный `@var`-докблок на `MustVerifyEmail` только в точке, где это документирует намерение, без рантайм-эффекта). Тест-first: red под `zend.assertions=1` до фикса → green после.
+
+## Рубрика (бинарно, commit-review.md §3)
+
+☑ Атомарность/целостность (один смысл — упрочнение auth; ~229/98; ревьюабелен) · ☑ Логика vs спека/интент (все AC покрыты; FormRequest 1:1; троттл на нужных роутах) · ☒ **Business-security (OWASP): блокер — рантайм-ложный assert на auth-пути verify-email, регрессия + §8** · ☑ Тихие регрессии/parity (слои Task/Repository не обойдены; ключи ошибок/redirect сохранены) · ☑ Тесты (троттл-тесты не вакуумны — ловят снятие middleware/смену лимита; nit по «первые 6 = валидация-фейл») · ☑ N+1/перф (нет) · ☑ Over-engineering (FormRequest минимальны) · ☒ **Чужая среда (§3 п.8): ось CACHE_STORE закрыта (array в CI); ось `zend.assertions` — блокер**
+
+## Журнал закрытия находок
+
+<!-- История статуса — записями, не правкой чужих строк. -->
+- BLOCKER `VerifyEmailController.php:21` (рантайм-ложный `assert($user instanceof MustVerifyEmail)`) → открыт, ожидает фикс-коммит (fix-now). Снятие FAIL-veto — только повторным ревью после фикса.
+
+## Связи
+
+- Разбор «почему» (автор, ADR-009): `a1f6c53-auth-hardening.md` (рядом).
+- Фича: `../../features/FEAT-007-auth-hardening/impl.md` · `../../features/FEAT-007-auth-hardening/spec.md`.
+- Прецедент паттерна assert: `cbook/e0c8ee3-review.md` (там assert-предикаты были рантайм-**истинны** — здесь `instanceof MustVerifyEmail` рантайм-**ложен**, отличие материально).
+- Гайд ревью: [`../../guides/commit-review.md`](../../guides/commit-review.md) (§3 п.8 «Чужая среда», §4.2 severity/reachability).
