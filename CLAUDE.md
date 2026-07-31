@@ -92,5 +92,5 @@ study-cbook-ai/                    # = внутренний репозитори
 
 ## Локальный стенд
 
-Порты и сервисы: Laravel app :80 (Sail APP_PORT), Vite :5173, PostgreSQL :5432, Redis :6379, Mailpit :8025; Filament — /admin. Подробности и env-профили — `ai/ops/local-setup.md`.
+Порты и сервисы: Laravel app :80 (Sail APP_PORT), Vite :5173, MySQL 8 :3306, Redis :6379, Mailpit :8025; Filament — /admin. Подробности и env-профили — `ai/ops/local-setup.md`.
 Гейты и команды стека — `ai/guides/stack-specifics.md`.
