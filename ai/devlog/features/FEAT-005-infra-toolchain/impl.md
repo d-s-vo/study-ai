@@ -96,6 +96,14 @@ README обновлён (pnpm + перечень сервисов Redis/Mailpit 
 (sanity выше). `package.json` не тронут (зона другой работы). YAML провалидирован (`yq`: 4 job'а
 парсятся). Больше ничего не менялось.
 
+## Дополнение по итогам ревью смежной работы — коммит `1ff25df`
+`ci: прогонять линт и проверку типов фронтенда` (1 файл, +4): в job `frontend` после установки
+зависимостей и перед `pnpm build` добавлены шаги `Lint` (`pnpm run --if-present lint`) и `Typecheck`
+(`pnpm run --if-present typecheck`). Контекст: параллельная ветка гигиены фронта вводит npm-скрипты
+`lint`/`typecheck` — CI должен их энфорсить после её merge, но не краснеть до него: `--if-present`
+даёт exit 0 при отсутствии скрипта (проверено локально pnpm 10.30.3: оба absent-прогона exit 0).
+YAML провалидирован (`yq`, порядок шагов Install → Lint → Typecheck → Build).
+
 ## Итог
 Локальный стенд и тулчейн приведены к ТЗ: Redis+Mailpit подняты и доказаны вживую, тестовый контур
 жёстко на MySQL (`DB_CONNECTION` явно), гейты `lint`/`analyse`/`test` в composer, npm→pnpm, CI на
