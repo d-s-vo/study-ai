@@ -1,0 +1,11 @@
+{
+  "feat": "FEAT-006",
+  "branch": "feat/user-dto",
+  "repo": "cbook",
+  "status": "done",
+  "adr": null,
+  "commit": "fd0e5fe",
+  "desc": "UserData DTO граница Inertia + автоген TS-типов (typescript:transform)",
+  "created": "2026-07-31T13:15:30Z",
+  "updated": "2026-07-31T13:15:30Z"
+}

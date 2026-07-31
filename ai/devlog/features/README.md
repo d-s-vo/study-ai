@@ -34,6 +34,7 @@ FEAT-NNN-slug/
 | FEAT-003 | feat/enterprise-skeleton | cbook | done | 2038821 | активация конфига Pint (pint.json) + strict_types/psr12 по базе |
 | FEAT-004 | feat/breeze-inertia-auth | cbook | done | e0c8ee3 | Breeze (Inertia/Vue3/TS/Tailwind) + рефактор авторизации в слои (UserRepository/RegisterUserTask) |
 | FEAT-005 | feat/infra-toolchain | cbook | done | 74fe7ab | redis+mailpit, окружение под mysql, CI GitHub Actions |
+| FEAT-006 | feat/user-dto | cbook | done | fd0e5fe | UserData DTO граница Inertia + автоген TS-типов (typescript:transform) |
 <!-- FEAT-MAP:END -->
 
 > Строки таблицы — `⚙️ RUNTIME`: append-only, пишутся `scripts/feat-map.sh` (или вручную под
