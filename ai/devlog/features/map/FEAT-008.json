@@ -1,0 +1,11 @@
+{
+  "feat": "FEAT-008",
+  "branch": "feat/frontend-hygiene",
+  "repo": "cbook",
+  "status": "done",
+  "adr": null,
+  "commit": "348396b",
+  "desc": "ESLint flat-config, pnpm lint/typecheck, фронт-гигиена",
+  "created": "2026-07-31T13:15:31Z",
+  "updated": "2026-07-31T13:15:31Z"
+}
