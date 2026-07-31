@@ -6,11 +6,21 @@ branch: feat/infra-toolchain
 feat: FEAT-005
 date: 2026-07-31
 final_hash:
+fix_chain:
+  - hash: cc3df94f9ca4ef22e87e33dfe6c32e9a12632804
+    patch_id: 4cf21d0b3c4a7f0a5f3554a5b2cea30c760f190c
+    message: 'fix: указать версию pnpm в CI'
+  - hash: 1ff25dfe1089ac52b14919f1ae712e8f1c66e78c
+    patch_id: 2fed2fa22856b95ecd05d0b2769e6f705f2f3101
+    message: 'ci: прогонять линт и проверку типов фронтенда'
 ---
 
 # cbook@74fe7ab — chore: поднять redis и mailpit, выровнять окружение под mysql и завести CI
 
 > Коммит-сообщение (как в клиентском репо): `chore: поднять redis и mailpit, выровнять окружение под mysql и завести CI`
+> Итоговая цепочка: `74fe7ab` (фича, 8 файлов, +189/−21) + `cc3df94`
+> (`fix: указать версию pnpm в CI` — закрытие блокера ревью, +4) + `1ff25df`
+> (`ci: прогонять линт и проверку типов фронтенда` — энфорс гейтов смежной фичи, +4).
 
 ## Кратко (для инженера)
 
@@ -78,6 +88,30 @@ job переопределяет `DB_HOST=127.0.0.1` (сервис пробро�
   заявленный риск #1 фичи.
 - **Драйверы** (cache=redis, queue=redis, session=database) — по решению спеки (session в БД переживает
   сброс Redis и не требует Redis в тестовом контуре).
+
+## Цепочка после ревью
+
+### `cc3df94` — fix: указать версию pnpm в CI (блокер ревью)
+Оба шага `uses: pnpm/action-setup@v4` (job'ы `tests` и `frontend`) были без входа `version:`, а
+`package.json` не содержит поля `packageManager` → по документации action-setup v4 шаг падает, CI
+красный на любом PR/push. Фикс: `with: version: 10` к обоим шагам. Мажор выбран по факту: локально
+pnpm 10.30.3, `pnpm-lock.yaml` `lockfileVersion: '9.0'` — pnpm 10 читает его (зелёный
+`pnpm install --frozen-lockfile` локально). `package.json` не тронут (зона смежной фичи).
+
+### `1ff25df` — ci: прогонять линт и проверку типов фронтенда (расширение по итогам ревью смежной фичи)
+**Мотив:** параллельная ветка гигиены фронта вводит npm-скрипты `lint` (eslint flat-config) и
+`typecheck` (`vue-tsc --noEmit`); обе ветки уйдут в `develop`, и CI обязан энфорсить эти гейты после
+её merge. В job `frontend` между `Install dependencies` и `Build` добавлены шаги `Lint`
+(`pnpm run --if-present lint`) и `Typecheck` (`pnpm run --if-present typecheck`).
+
+**Почему `--if-present`:** до merge смежной ветки скриптов в `package.json` нет, а шаги не должны
+валить CI. Флаг `--if-present` даёт no-op с exit 0 при отсутствии скрипта; после появления скриптов
+шаги начинают реально исполняться и энфорситься — без повторной правки workflow.
+
+**Доказательство no-op:** локальный прогон pnpm 10.30.3 на текущем `package.json` (скриптов нет):
+`pnpm run --if-present lint` → exit 0, `pnpm run --if-present typecheck` → exit 0. YAML провалидирован
+(`yq`): порядок шагов job `frontend` — checkout → Setup pnpm → Setup Node → Install dependencies →
+Lint → Typecheck → Build.
 
 ## Связи
 
