@@ -1,0 +1,11 @@
+{
+  "feat": "FEAT-004",
+  "branch": "feat/breeze-inertia-auth",
+  "repo": "cbook",
+  "status": "done",
+  "adr": null,
+  "commit": "e0c8ee3",
+  "desc": "Breeze (Inertia/Vue3/TS/Tailwind) + рефактор авторизации в слои (UserRepository/RegisterUserTask)",
+  "created": "2026-07-31T13:15:30Z",
+  "updated": "2026-07-31T13:15:30Z"
+}
