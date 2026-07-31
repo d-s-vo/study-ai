@@ -6,16 +6,16 @@ feat: FEAT-005
 branch: feat/infra-toolchain
 reviewer_model: Opus 4.8
 review_date: 2026-07-31
-verdict: FAIL
+verdict: PASS
 blockers_total: 1
-blockers_open: 1
-resolved_by: []
+blockers_open: 0
+resolved_by: [cc3df94]
 ---
 
 # cbook@74fe7ab — REVIEW — chore: поднять redis и mailpit, выровнять окружение под mysql и завести CI
 
-**Verdict:** FAIL
-**Blocking findings:**
+**Verdict:** PASS (итог цепочки 74fe7ab + фикс cc3df94; исходный вердикт коммита был FAIL — см. журнал)
+**Blocking findings (исходные, закрыты):**
 - `.github/workflows/ci.yml:74` и `:99` — `uses: pnpm/action-setup@v4` **без входа `version:`**, при
   этом `package.json` **не содержит поля `packageManager`** (проверено: `json.load` → `packageManager=None`,
   `engines=None`, секции `pnpm` нет), а `pnpm-workspace.yaml` несёт только `onlyBuiltDependencies: [esbuild]`
@@ -78,7 +78,7 @@ resolved_by: []
   pnpm build ok) + живая приёмка (redis/mailpit healthy, письмо доставлено). Не перепрогонял (дорого, уже
   зелёные) — блокер лежит **вне** локального контура: в ненаблюдавшемся GitHub-Actions-прогоне.
 
-**Suggested next:** fix-forward-FEAT-005 (fix-now)
+**Suggested next:** none (blocker закрыт фиксом cc3df94, повторное узкое ревью — PASS)
 
 ## Рубрика (бинарно, commit-review.md §3)
 
@@ -92,9 +92,15 @@ develop; критический путь — деливери-гейт фичи)
 
 ## Журнал закрытия находок
 
-- Blocking #1 (`pnpm/action-setup@v4` без `version:` → красный CI) → **ОТКРЫТ**. Фикс — добавить
-  `with: version: <9|10>` к обоим шагам в `ci.yml` (зона FEAT-005). Merge заблокирован до фикс-коммита
-  и его повторного ревью (§6). Вердикт исходного коммита снимет только исходный ревьюер.
+- Blocking #1 (`pnpm/action-setup@v4` без `version:` → красный CI) → **закрыт фиксом `cc3df94`**
+  (`fix: указать версию pnpm в CI`): `with: version: 10` добавлен к ОБОИМ шагам (ci.yml:74→75-76,
+  :99→101-102), других изменений в дифе нет. Узкое повторное ревью тем же ревьюером (§6, 2026-07-31):
+  (а) находка закрыта — `version` у action-setup v4 достаточен без `packageManager` (по README действия
+  version обязателен ИЛИ packageManager; мажор-указание резолвится в свежий pnpm 10.x); (б) мажор
+  совместим с lockfile — `pnpm-lock.yaml` `lockfileVersion: '9.0'` читается pnpm 10 (зелёный локальный
+  `pnpm install --frozen-lockfile` был на pnpm 10.30.3, тот же мажор); (в) регрессий нет — диф строго
+  2×2 строки, стоп-словарь по дифу чист, сообщение conventional. FAIL-veto снят исходным ревьюером
+  → итог цепочки PASS. Ревью фикс-коммита: `cc3df94-review.md` (рядом).
 - Non-blocking (mailpit healthcheck / `pnpm dlx` / дубль build) → nit, закрытия не требуют.
 
 ## Связи
