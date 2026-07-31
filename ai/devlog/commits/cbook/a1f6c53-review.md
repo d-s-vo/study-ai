@@ -6,16 +6,16 @@ feat: FEAT-007
 branch: feat/auth-hardening
 reviewer_model: Opus 4.8
 review_date: 2026-07-31
-verdict: FAIL
+verdict: PASS
 blockers_total: 1
-blockers_open: 1
-resolved_by: []
+blockers_open: 0
+resolved_by: [f4a9d63]
 ---
 
 # cbook@a1f6c53 — REVIEW — feat: усилить auth — троттлинг публичных роутов, валидация во FormRequest, снятие PHPStan-baseline
 
-**Verdict:** FAIL
-**Blocking findings:**
+**Verdict:** PASS (итог цепочки a1f6c53 + фикс f4a9d63; исходный вердикт коммита был FAIL — см. журнал)
+**Blocking findings (исходные, закрыты):**
 - `app/Http/Controllers/Auth/VerifyEmailController.php:21` — `assert($user instanceof MustVerifyEmail)` ассертит предикат, **ложный в рантайме** для фактического `App\Models\User`. Импортирован **контракт** `Illuminate\Contracts\Auth\MustVerifyEmail` (интерфейс), а `User` его **не реализует**: базовый `Illuminate\Foundation\Auth\User` объявляет `implements AuthenticatableContract, AuthorizableContract, CanResetPasswordContract` и лишь **подключает трейт** `use Illuminate\Auth\MustVerifyEmail` (даёт методы `hasVerifiedEmail()`/`markEmailAsVerified()`), но НЕ имплементит интерфейс-контракт; `App\Models\User` контракт тоже не добавляет (импорт закомментирован, `app/Models/User.php:7,13`). Значит `$user instanceof Illuminate\Contracts\Auth\MustVerifyEmail === false`. **Контрпример (достижимый auth-путь):** при `zend.assertions=1` (компилируемый дефолт PHP при отсутствии ini-переопределения; `php.ini-development`) любой аутентифицированный запрос `GET /verify-email` / подписанный `GET /verify-email/{id}/{hash}` → `assert(false)` бросает `AssertionError` → HTTP 500; коммитнутые тесты `tests/Feature/Auth/EmailVerificationTest.php` («email verification screen can be rendered» ждёт 200; «email can be verified» ждёт redirect+`Verified`) в такой среде **красные**. Это **регрессия** относительно `e0c8ee3`, где было `$request->user()->hasVerifiedEmail()` без assert — работало во всех средах. Класс §3 п.8 «Чужая среда» / memory-gotcha «зелено локально ≠ чужая среда»: локальный Sail имеет `zend.assertions=-1` (assert = no-op), поэтому impl-прогон «36 passed / живой verify-email» защиты не даёт — он маскирует дефект, а не опровергает.
 
 **Non-blocking notes:**
@@ -43,6 +43,7 @@ resolved_by: []
 
 <!-- История статуса — записями, не правкой чужих строк. -->
 - BLOCKER `VerifyEmailController.php:21` (рантайм-ложный `assert($user instanceof MustVerifyEmail)`) → открыт, ожидает фикс-коммит (fix-now). Снятие FAIL-veto — только повторным ревью после фикса.
+- **Blocking #1 → закрыт фиксом `f4a9d63`** (`feat: включить обязательное подтверждение email при регистрации`; направление (а) из Suggested next, оформлено спека-дельтой владельца — email-верификация внедрена как продуктовое решение): `User implements MustVerifyEmail` + `VerifyEmailController` сведён к штатному `$request->fulfill()` — assert-ов в verify-контуре не осталось. Повторное ревью тем же ревьюером (§6, 2026-07-31, `f4a9d63-review.md`, полная рубрика — новое auth-поведение): корректно, регрессий нет; гейты перепрогнаны мной — Pest **39 passed под `php -d zend.assertions=1 -d assert.exception=1`** (среда контрпримера — 0 AssertionError), PHPStan L10 No errors без baseline, Pint pass. Minor-нота о скоупе (активация писем) снята спека-дельтой. Сопровождающая дока — `6605919` (`6605919-review.md`, PASS trivial-scope). **FAIL-veto снят.**
 
 ## Связи
 
