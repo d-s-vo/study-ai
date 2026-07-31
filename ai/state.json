@@ -1,13 +1,23 @@
 {
-  "updated": "2026-07-31T13:10:35Z",
+  "updated": "2026-07-31T15:58:42Z",
   "repos": {
     "cbook": {
       "type": "bare",
       "base": "develop",
-      "base_local": "18c7282",
-      "base_origin": "18c7282",
+      "base_local": "73050e3",
+      "base_origin": "73050e3",
       "behind": 0,
-      "tasks": {}
+      "tasks": {
+        "recipe-data-layer": {
+          "branch": "feat/recipe-data-layer",
+          "head": "73050e3",
+          "feat": "FEAT-009",
+          "ahead": 0,
+          "behind": 0,
+          "delivered": true,
+          "merged": true
+        }
+      }
     }
   }
 }
