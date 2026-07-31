@@ -104,3 +104,5 @@ git show <hash> | git patch-id --stable
 | | | | | | | |
 | cbook | e0c8ee3 | FEAT-004 | PASS | — | 2026-07-30 | `cbook/e0c8ee3-review.md` |
 | cbook | 74fe7ab | FEAT-005 | FAIL | нет | 2026-07-31 | `cbook/74fe7ab-review.md` |
+| cbook | cc3df94 | FEAT-005 | PASS | — | 2026-07-31 | `cbook/cc3df94-review.md` |
+| cbook | 74fe7ab | FEAT-005 | PASS | да: cc3df94 | 2026-07-31 | `cbook/74fe7ab-review.md` |
