@@ -38,6 +38,7 @@ FEAT-NNN-slug/
 | FEAT-007 | feat/auth-hardening | cbook | done | a1f6c53 | auth-hardening: throttle register/forgot/reset, FormRequest-валидация, email-верификация (a1f6c53+f4a9d63+6605919) |
 | FEAT-008 | feat/frontend-hygiene | cbook | done | 348396b | ESLint flat-config, pnpm lint/typecheck, фронт-гигиена |
 | FEAT-009 | feat/recipe-data-layer | cbook | done | 73050e3 | слой данных Recipe/Ingredient: миграции (user_id, каскады), модели, Difficulty, RecipeRepository, DTO+TS-типы (c48543f+73050e3) |
+| FEAT-010 | feat/recipe-crud | cbook | in-progress | 632c4aa | CRUD-мутации рецептов: Tasks, FormRequests, RecipePolicy (анти-IDOR), маршруты; /profile под verified; передано на доставку (632c4aa) |
 <!-- FEAT-MAP:END -->
 
 > Строки таблицы — `⚙️ RUNTIME`: append-only, пишутся `scripts/feat-map.sh` (или вручную под
