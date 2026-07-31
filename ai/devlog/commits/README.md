@@ -73,6 +73,7 @@ git show <hash> | git patch-id --stable
 | cbook | 6605919 | 49d4f3e30e8c | FEAT-007 | 2026-07-31 | docs: отметить обязательное подтверждение email в инструкции запуска | | `cbook/6605919-readme-email-verification-note.md` |
 | cbook | c48543f | 634101e0ef36 | FEAT-009 | 2026-07-31 | feat: слой данных рецептов и ингредиентов | | `cbook/c48543f-recipe-data-layer.md` |
 | cbook | 73050e3 | fc611a67b819 | FEAT-009 | 2026-07-31 | refactor: единообразие типов дат в RecipeData и осмысленная проверка синхронизации ингредиентов | | `cbook/73050e3-recipe-data-timestamps-sync-test.md` |
+| cbook | 632c4aa | 5bf0c20fd240 | FEAT-010 | 2026-07-31 | feat: мутации рецептов с проверкой владельца | | `cbook/632c4aa-recipe-crud.md` |
 
 ---
 
@@ -122,3 +123,4 @@ git show <hash> | git patch-id --stable
 | cbook | a1f6c53 | FEAT-007 | PASS | да: f4a9d63 | 2026-07-31 | `cbook/a1f6c53-review.md` |
 | cbook | c48543f | FEAT-009 | PASS | — | 2026-07-31 | `cbook/c48543f-review.md` |
 | cbook | 73050e3 | FEAT-009 | PASS | — | 2026-07-31 | `cbook/73050e3-review.md` |
+| cbook | 632c4aa | FEAT-010 | PASS | — | 2026-07-31 | `cbook/632c4aa-review.md` |
