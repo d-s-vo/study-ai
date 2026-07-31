@@ -37,6 +37,7 @@ FEAT-NNN-slug/
 | FEAT-006 | feat/user-dto | cbook | done | fd0e5fe | UserData DTO граница Inertia + автоген TS-типов (typescript:transform) |
 | FEAT-007 | feat/auth-hardening | cbook | done | a1f6c53 | auth-hardening: throttle register/forgot/reset, FormRequest-валидация, email-верификация (a1f6c53+f4a9d63+6605919) |
 | FEAT-008 | feat/frontend-hygiene | cbook | done | 348396b | ESLint flat-config, pnpm lint/typecheck, фронт-гигиена |
+| FEAT-009 | feat/recipe-data-layer | cbook | in-progress | c48543f | слой данных Recipe/Ingredient: миграции, модели, Difficulty, RecipeRepository, DTO, автоген TS, фабрики |
 <!-- FEAT-MAP:END -->
 
 > Строки таблицы — `⚙️ RUNTIME`: append-only, пишутся `scripts/feat-map.sh` (или вручную под

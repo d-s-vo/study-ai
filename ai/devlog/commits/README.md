@@ -71,6 +71,7 @@ git show <hash> | git patch-id --stable
 | cbook | a1f6c53 | e9ada681a6ca | FEAT-007 | 2026-07-31 | feat: усилить auth — троттлинг публичных роутов, валидация во FormRequest, снятие PHPStan-baseline | | `cbook/a1f6c53-auth-hardening.md` |
 | cbook | f4a9d63 | 767ec0ee3f7b | FEAT-007 | 2026-07-31 | feat: включить обязательное подтверждение email при регистрации | | `cbook/f4a9d63-auth-hardening.md` |
 | cbook | 6605919 | 49d4f3e30e8c | FEAT-007 | 2026-07-31 | docs: отметить обязательное подтверждение email в инструкции запуска | | `cbook/6605919-readme-email-verification-note.md` |
+| cbook | c48543f | 634101e0ef36 | FEAT-009 | 2026-07-31 | feat: слой данных рецептов и ингредиентов | | `cbook/c48543f-recipe-data-layer.md` |
 
 ---
 
