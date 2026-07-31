@@ -100,6 +100,29 @@ password/remember_token.
 Внутреннее изменение контракта Inertia-пропсов; user-visible поведение не меняется. README уже описывает
 `typescript:transform` — актуально, правок публичной доки не требуется (checked, no changes needed).
 
+## Фикс по ревью (коммит 7ff6cf8)
+
+Ревью `fd0e5fe` вернуло FAIL (`ai/devlog/commits/cbook/fd0e5fe-review.md`). Fix-forward той же веткой:
+
+- **Blocker — безусловная регистрация dev-провайдера.** `TypeScriptTransformerServiceProvider` наследует базу из
+  require-dev-пакета; строка в `bootstrap/providers.php` инстанцировала его на каждом буте → `composer install
+  --no-dev` (и любой прод-запрос) падал бы фаталом «class not found». Фикс: провайдер убран из
+  `bootstrap/providers.php`; регистрация — в `AppServiceProvider::register()` под гардом
+  `class_exists(TypeScriptTransformerApplicationServiceProvider::class)` (нет пакета → класс провайдера вообще
+  не загружается; `::class`-константа автолоад не триггерит).
+- **WARN — сторожевая сила негативных тестов.** `missing('auth.user.password'/'remember_token')` не ловили
+  регрессию «DTO → сырая модель» (их и так прячет `$hidden`). В оба Inertia-теста добавлены
+  `->missing('auth.user.created_at')` и `->missing('auth.user.updated_at')` — поля, которые сырая модель
+  реально протекла бы.
+- **Доказательство прод-сценария** (чистая копия в scratchpad, без порчи vendor/ worktree):
+  `composer install --no-dev` — OK (post-autoload-dump `package:discover` прошёл); явный `php artisan
+  package:discover` — EXIT 0; `php artisan optimize` — все секции DONE (config/events/routes/views/laravel-data;
+  `CACHE_STORE=file` — в контейнере проверки нет MySQL-драйвера, это среда, не код); `php artisan about` — бут ок;
+  `vendor/spatie/laravel-typescript-transformer` отсутствует. Worktree остался с dev-зависимостями (рабочее состояние).
+- **Гейты после фикса:** Pint passed; PHPStan L10 No errors; Pest (gate `backend-tests`) **38 passed**
+  (122 assertions); `typescript:transform` в dev-режиме работает, `generated.d.ts` без diff (детерминирован).
+- Разбор коммита по ADR-009: `ai/devlog/commits/cbook/fd0e5fe-user-dto.md` (цепочка fd0e5fe + 7ff6cf8).
+
 ## Итог
 Advisory-долг FEAT-004 закрыт: наружу в Inertia уходит `UserData` (Spatie Data), а не сырая модель (STRICT RULE 4);
 TS-тип `User` больше не рукописный, а автогенерируемый (`App.Data.UserData`), `auth.user` честно nullable, все
