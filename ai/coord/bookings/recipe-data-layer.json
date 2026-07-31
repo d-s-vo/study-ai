@@ -4,7 +4,7 @@
   "adr": null,
   "repo": "cbook",
   "branch": "feat/recipe-data-layer",
-  "status": "spec",
+  "status": "impl",
   "agent": "manual-59416",
   "account": "default",
   "index": 1,
@@ -15,5 +15,5 @@
   },
   "redis_db": 5,
   "created": "2026-07-31T13:16:10Z",
-  "updated": "2026-07-31T13:16:40Z"
+  "updated": "2026-07-31T13:41:14Z"
 }
