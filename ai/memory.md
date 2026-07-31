@@ -84,8 +84,9 @@
   - [x] ~~Задача — enterprise-барьеры / активация Pint (FEAT-003)~~ — DONE (коммит `2038821`, доставка за владельцем).
   - [x] ~~Фронт-скелет (Breeze Inertia/Vue/TS) + enterprise-рефактор авторизации (FEAT-004)~~ — DONE (коммит `e0c8ee3`, доставка за владельцем).
   - [ ] Задача 1b и далее — домен Recipe/Ingredient, миграции MySQL 8, Filament 5, media.
-  - [ ] Долг (advisory ревью FEAT-004, `e0c8ee3-review.md`): `HandleInertiaRequests` отдаёт в Inertia сырую модель `User` (STRICT RULE 4 «только DTO наружу») — обернуть в DTO (Spatie Data) в доменной фазе.
-- [ ] Уточнить у владельца: CI на `develop` (настроен ли pipeline); дисковый драйвер для `whyme-agency/laravel-media` (локальный/S3) — `(уточнить)`.
+  - [x] ~~Долг (advisory ревью FEAT-004, `e0c8ee3-review.md`): `HandleInertiaRequests` отдаёт в Inertia сырую модель `User`~~ — закрыт FEAT-006 (`fd0e5fe`): в Inertia уходит `UserData::from($user)` (проверено по коду 2026-07-31).
+- [x] ~~Уточнить у владельца: CI на `develop`~~ — снят: CI GitHub Actions настроен в FEAT-005 (`74fe7ab`) и работает.
+- [ ] Уточнить у владельца: дисковый драйвер для `whyme-agency/laravel-media` (локальный/S3) — `(уточнить)` при этапе медиа.
 - [x] ~~Уточнить у владельца: включать ли **email-верификацию**~~ — решено владельцем 2026-07-31: **внедрена** в FEAT-007 (`f4a9d63`, spec-дельта). Остаточный nit из ревью: `/profile` — auth-only без `verified` (дефолт Breeze); решить при доменной фазе.
 - [x] ~~Финальный выбор СУБД~~ — снят ТЗ: **MySQL 8** (Sail-сервис `mysql`, порт 3306).
 
