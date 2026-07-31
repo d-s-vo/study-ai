@@ -41,6 +41,7 @@ cbook (backend) — один репозиторий. Мультирепный р
 - [ ] **Негатив (auth):** гость → 302 на login; аутентифицированный, но **не verified** → redirect на `verification.notice` (middleware `verified`).
 - [ ] **Негатив (валидация):** невалидный payload (пустой title, `difficulty` вне enum, `steps` не массив, ингредиент без `name`) → 422/redirect с ошибками валидации, запись не создана.
 - [ ] `user_id` из payload игнорируется (нельзя назначить чужого владельца) — negative-тест на mass assignment.
+- [ ] **Попутный долг (решение владельца 2026-07-31, nit ревью FEAT-007):** маршруты `/profile` (`profile.edit/update/destroy`) переведены под `middleware(['auth','verified'])`; тест: неверифицированный пользователь `GET /profile` → redirect `verification.notice`, верифицированный → 200. Существующие profile-тесты обновить (фабрика по умолчанию verified).
 - [ ] Гейты: PHPStan L10 (0 подавлений), Pint pass, Pest 0 fail (вкл. новые), арх-барьер зелёный.
 
 ## Технический дизайн
@@ -157,7 +158,8 @@ User-visible появится вместе со страницами (011). В 0
 | `app/Http/Requests/StoreRecipeRequest.php` | новый FormRequest |
 | `app/Http/Requests/UpdateRecipeRequest.php` | новый FormRequest |
 | `app/Http/Controllers/RecipeController.php` | новый тонкий контроллер (store/update/destroy) |
-| `routes/web.php` | +мутационные маршруты `recipes.store/update/destroy` |
+| `routes/web.php` | +мутационные маршруты `recipes.store/update/destroy`; `/profile` под `verified` |
+| `tests/Feature/Profile/ProfileTest.php` (или существующий profile-тест Breeze) | +негатив: unverified → `verification.notice` |
 | `tests/Feature/ArchitectureTest.php` | allow-list `+App\Policies` |
 | `tests/Feature/Recipe/RecipeCrudTest.php` | новые тесты (позитив + негатив прав/валидации) |
 
