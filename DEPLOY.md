@@ -36,7 +36,7 @@ git fetch origin                         # на ветке: любая — об�
 git switch develop                       # → теперь на ветке: develop
 git branch --show-current                # проверь: develop (перед reset --hard!)
 git reset --hard origin/develop          # на ветке: develop — выровнять с origin
-git merge origin/feat/<slug>             # на ветке: develop — влить фичу
+git merge origin/feat/<slug> -m 'merge feature branch in master'  # на ветке: develop — влить фичу
 git push origin develop                  # на ветке: develop — запушить
 
 # --- деплой develop → main (когда готов; можно пропустить, если прод не нужен) ---
