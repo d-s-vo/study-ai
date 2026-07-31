@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-31T15:58:42Z",
+  "updated": "2026-07-31T16:08:18Z",
   "repos": {
     "cbook": {
       "type": "bare",
@@ -7,17 +7,7 @@
       "base_local": "73050e3",
       "base_origin": "73050e3",
       "behind": 0,
-      "tasks": {
-        "recipe-data-layer": {
-          "branch": "feat/recipe-data-layer",
-          "head": "73050e3",
-          "feat": "FEAT-009",
-          "ahead": 0,
-          "behind": 0,
-          "delivered": true,
-          "merged": true
-        }
-      }
+      "tasks": {}
     }
   }
 }

@@ -4,7 +4,7 @@
   "adr": null,
   "repo": "cbook",
   "branch": "feat/recipe-crud",
-  "status": "spec",
+  "status": "delivered",
   "agent": "manual-59416",
   "account": "default",
   "index": 2,
@@ -15,5 +15,5 @@
   },
   "redis_db": 6,
   "created": "2026-07-31T13:16:10Z",
-  "updated": "2026-07-31T13:16:33Z"
+  "updated": "2026-07-31T16:34:50Z"
 }
