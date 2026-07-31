@@ -1,0 +1,11 @@
+{
+  "feat": "FEAT-005",
+  "branch": "feat/infra-toolchain",
+  "repo": "cbook",
+  "status": "done",
+  "adr": null,
+  "commit": "74fe7ab",
+  "desc": "redis+mailpit, окружение под mysql, CI GitHub Actions",
+  "created": "2026-07-31T13:15:30Z",
+  "updated": "2026-07-31T13:15:30Z"
+}
