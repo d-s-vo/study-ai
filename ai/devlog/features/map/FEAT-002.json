@@ -1,0 +1,11 @@
+{
+  "feat": "FEAT-002",
+  "branch": "feat/laravel-skeleton",
+  "repo": "cbook",
+  "status": "done",
+  "adr": null,
+  "commit": "9f4b857",
+  "desc": "greenfield-скелет Laravel 12 + enterprise-слои + QA-тулчейн",
+  "created": "2026-07-31T13:15:29Z",
+  "updated": "2026-07-31T13:15:29Z"
+}
