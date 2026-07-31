@@ -5,7 +5,7 @@ patch_id: 5bf0c20fd240339fb177d339cb41a4493f9be0df
 branch: feat/recipe-crud
 feat: FEAT-010
 date: 2026-07-31
-final_hash:
+final_hash: 632c4aa28b6187bb6d2dcc6f1a8166478fd7d0ea  # ff-merge, хеш не менялся
 ---
 
 # cbook@632c4aa — мутации рецептов с проверкой владельца

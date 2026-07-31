@@ -8,7 +8,7 @@ prevention: 'обязательные негативные тесты прав (
 
 # FEAT-010: CRUD рецептов — Implementation
 
-## Статус: DONE (передано на доставку)
+## Статус: DONE (merged → develop)
 ## Дата: 2026-07-31
 
 ## Что сделано
@@ -28,6 +28,7 @@ prevention: 'обязательные негативные тесты прав (
 | `tests/Feature/ProfileTest.php` | +негатив: unverified `GET /profile` → redirect `verification.notice` |
 
 Коммит: `632c4aa` `feat: мутации рецептов с проверкой владельца` (ветка `feat/recipe-crud`).
+**Merged → develop fast-forward 2026-07-31 (вершина develop = `632c4aa`, хеш не менялся).** Интеграционный прогон гейтов на develop-дереве после merge: Pest 65/242 (0 fail), PHPStan L10 No errors, Pint pass. Уборка выполнена: стенд снесён (`sail down -v`, volumes удалены), worktree убран, бронь в архиве, feat-map — done.
 
 ## Отклонения от spec
 
