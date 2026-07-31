@@ -96,33 +96,48 @@
 Незыблемо: `declare(strict_types=1)` в каждом `.php`; Eloquent/`DB` — только в `app/Data/Repositories/*`;
 наружу (в Inertia/Vue) — **только DTO**, не сырые модели; вся серверная валидация — через Form Requests.
 
-## 4. Реальное состояние репозитория (критично для плана)
+## 4. Реальное состояние репозитория (критично для плана; срез 2026-07-31, develop@`18c7282`)
 
-- Клиентский репо (`nuxt4-ts-project-cbook`) сейчас содержит **только legacy Nuxt-код**.
-  **Laravel-проекта НЕТ**: нет `composer.json`, `artisan`, `vendor/`, `phpstan.neon`, `.pint.json`.
-- Каталог **`app/` занят Nuxt** (Vue-фронт: `app.vue`, `pages`, `components`, `composables`…).
-  У Laravel `app/` — это бэкенд. **Коллизия.** Значит план обязан НАЧАТЬСЯ со скелета Laravel,
-  который забирает `app/` под бэкенд, а фронт переезжает в `resources/js` (Inertia). Nuxt-фронт
-  замещается; его переиспользуемые куски (BVI) переносятся.
-- Поэтому первые задачи — это **greenfield-скелет**, а не «добавь каталоги в существующий Laravel».
+**Фундамент построен и «вылечен» — legacy Nuxt из репо полностью удалён** (референс лежит в
+workspace `local/legacy_nuxt/`, вне клиентского репо). В `develop`/`main` влиты FEAT-002…008:
 
-## 5. Как скорректировать план разработки
+- **Скелет:** Laravel **12.64** (pinned) / PHP 8.4 / Sail (MySQL 8 `:3306` + Redis + Mailpit `:8025`);
+  `app/` — бэкенд Laravel, фронт — Inertia + Vue 3 TS strict в `resources/js` (Breeze-скелет),
+  Tailwind **v3**, Node-менеджер — **pnpm**.
+- **Слои:** `app/Tasks/` (канон: пустой `BaseTask`-ярлык; конкретный Task — `final`, DI в
+  конструкторе `private readonly`, данные — аргументы метода **`run()`**, НЕ `handle()`),
+  `app/Data/Repositories/` (единственное место Eloquent/`DB`), `app/Data/` (DTO Spatie),
+  `app/Resolvers/Page/` (пока пуст). Изоляция Eloquent **энфорсится Pest arch-тестом**
+  (`tests/Feature/ArchitectureTest.php`, red→green доказан).
+- **Auth (рабочий, закалённый):** Breeze Inertia + рефактор в слои (`UserRepository`,
+  `RegisterUserTask`); **email-верификация ВКЛЮЧЕНА** (`User implements MustVerifyEmail`,
+  dashboard под `verified`); throttle на register/forgot/reset; вся валидация — FormRequest;
+  в Inertia уходит **`UserData` DTO** (не сырая модель), TS-типы автогенерятся
+  (`artisan typescript:transform` → `resources/js/types/generated.d.ts`, коммитится).
+- **Качество:** PHPStan **L10 без baseline (0 подавлений)**, Pint (`pint.json`, psr12+strict),
+  Pest (43 passed), ESLint flat-config + `pnpm lint`/`typecheck`, **CI GitHub Actions**
+  (`.github/workflows/ci.yml`: Pint/PHPStan/Pest на MySQL-сервисе/lint/typecheck/build).
+  `.env.testing.example` — шаблон тестового окружения (живой `.env.testing` gitignored).
+- **Домена ещё НЕТ:** `Recipe`/`Ingredient`, Filament 5, `whyme-agency/laravel-media`, BVI —
+  не начаты. Filament и media **ещё не установлены** в composer.
 
-1. Переформулировать рамку: **«переписывание с нуля, переиспользуя идею + BVI»**, а не миграция.
-2. Последовательность:
-   - **1a — Скелет Laravel 12 + Sail:** решить стратегию `app/` (замена Nuxt-фронта на Inertia в
-     `resources/js`, удаление/архивация Nuxt-частей), поставить composer/автозагрузку/Sail/MySQL и
-     пакеты (spatie/laravel-data, larastan, pint, pest, filament 5, whyme-agency/laravel-media).
-   - **1b — Бэкенд-скелет:** каталоги слоёв + базовые классы (`BaseTask` с `handle`, `BaseRepository`),
-     конфиги качества (**Larastan** L10, `.pint.json` c `declare_strict_types`), **enforcement слоёв**
-     (изоляция Eloquent) через **Pest Architecture** или **deptrac** — обычный PHPStan level это НЕ
-     делает; `.gitkeep` для пустых каталогов; **доказать, что правило краснеет** временным файлом-нарушителем.
+## 5. План дальнейшей разработки
+
+1. Рамка прежняя: **«переписывание с нуля, переиспользуя идею + BVI»**, а не миграция.
+2. Сделано ✅: скелет (1a, FEAT-002), enterprise-барьеры (1b, FEAT-003), auth+фронт-скелет
+   (FEAT-004), инфра/CI + DTO-граница + auth-hardening + фронт-гигиена (FEAT-005…008).
+3. Следующее (порядок):
    - **2+ — Доменные срезы снизу-вверх:** миграция → Eloquent-модель → Repository → DTO → Task →
-     FormRequest → Controller → Resolver → Inertia-страница → Pest; сущности `Recipe`/`Ingredient`.
-   - Перенести **BVI-панель** как Inertia/Vue-компонент.
-   - **auth и серверную валидацию — сразу** (закрыть дыры Nuxt-версии), не откладывая.
-3. Не предполагать наличие Pint/PHPStan до установки. Инструменты запускать **через Sail**
-   (`sail bin pint`, `sail bin phpstan analyse`).
+     FormRequest → Controller → Resolver → Inertia-страница → Pest; сущности `Recipe`/`Ingredient`
+     (домен в `ai/memory.md` §North Star: steps — JSON-массив, ingredients — hasMany).
+     Высокорисковые зоны: Policies/владение (IDOR), N+1 на листингах, пагинация.
+   - **Filament 5** (установка = генератор: сразу ревиз-проход «генерённое vs STRICT»).
+   - **`whyme-agency/laravel-media`** (загрузка изображений — безопасно, не как в Nuxt).
+   - **BVI-панель** как Inertia/Vue-компонент (донор — `local/legacy_nuxt/`).
+4. Инструменты гонять **через Sail** (`sail bin pint`, `sail bin phpstan analyse`, `sail artisan test`);
+   новые правила/гейты — **доказывать red→green**; подавления (baseline и т.п.) запрещены без
+   номера фичи-погашения. Ревью каждого коммита обязательно (ADR-010), рубрика — 
+   `ai/guides/commit-review.md` (вкл. п.8 «чужая среда»: CI-раннер, `--no-dev`-прод, чистая машина).
 
 ## 6. Ограничения процесса (чтобы промпты ложились в наш пайплайн)
 
@@ -135,14 +150,22 @@
 
 ## 7. Открытые решения — уточнить у владельца
 
-- Стратегия `app/`: замещаем Nuxt целиком или сосуществование (вероятно — замещаем).
 - Диск для `whyme-agency/laravel-media`: локальный или S3/MinIO.
 - Какие конкретно паттерны/конвенции из `listvafintess` и `av1` воспроизводить (если владелец
-  может поделиться их структурой — это лучший образец для «enterprise-стиля»).
+  может поделиться их структурой — это лучший образец для «enterprise-стиля»; частично уже
+  выверено: канон Task `run()`/`final readonly` снят с `listvafitness`, см. `ai/memory.md` §Gotchas).
+- Нужен ли `verified`-middleware на `/profile` (сейчас auth-only — дефолт Breeze; nit из ревью FEAT-007).
+
+Решено ранее (НЕ переспрашивать): стратегия `app/` — Nuxt замещён целиком (сделано);
+СУБД — MySQL 8; email-верификация — включена (решение владельца 2026-07-31);
+CI — GitHub Actions в клиентском репо (работает).
 
 ---
 
-**Короткая суть для автора промптов:** это учебный **greenfield-Laravel-монолит**, собираемый
-для освоения enterprise-паттернов; Nuxt-код — донор идеи и BVI, не образец; репо сейчас пустой
-от Laravel (нужен скелет первым); правила — в `ai/`; enforcement слоёв — не «PHPStan level», а
-Pest Arch/deptrac; задачи — инкрементальные и объясняющие «почему».
+**Короткая суть для автора промптов:** это учебный **greenfield-Laravel-монолит** для освоения
+enterprise-паттернов; Nuxt-код — донор идеи и BVI (лежит в workspace `local/legacy_nuxt/`, в клиентском
+репо его больше нет). **Фундамент готов**: скелет Laravel 12 + слои (канон Task = `run()`, `final readonly`)
++ рабочий auth с email-верификацией + DTO-граница + QA-тулчейн (PHPStan L10 без подавлений, arch-тесты,
+ESLint, CI). **Следующий фронт — домен `Recipe`/`Ingredient`** (срезы снизу-вверх), затем Filament 5,
+media, BVI. Правила — в `ai/`; задачи — инкрементальные и объясняющие «почему»; каждый коммит проходит
+независимое ревью.
