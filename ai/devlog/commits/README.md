@@ -112,3 +112,6 @@ git show <hash> | git patch-id --stable
 | cbook | fd0e5fe | FEAT-006 | PASS | да: 7ff6cf8 | 2026-07-31 | `cbook/fd0e5fe-review.md` |
 | cbook | a1f6c53 | FEAT-007 | FAIL | нет | 2026-07-31 | `cbook/a1f6c53-review.md` |
 | cbook | 348396b | FEAT-008 | PASS | — | 2026-07-31 | `cbook/348396b-review.md` |
+| cbook | f4a9d63 | FEAT-007 | PASS | — | 2026-07-31 | `cbook/f4a9d63-review.md` |
+| cbook | 6605919 | FEAT-007 | PASS | — | 2026-07-31 | `cbook/6605919-review.md` |
+| cbook | a1f6c53 | FEAT-007 | PASS | да: f4a9d63 | 2026-07-31 | `cbook/a1f6c53-review.md` |
