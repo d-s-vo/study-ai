@@ -35,6 +35,7 @@ FEAT-NNN-slug/
 | FEAT-004 | feat/breeze-inertia-auth | cbook | done | e0c8ee3 | Breeze (Inertia/Vue3/TS/Tailwind) + рефактор авторизации в слои (UserRepository/RegisterUserTask) |
 | FEAT-005 | feat/infra-toolchain | cbook | done | 74fe7ab | redis+mailpit, окружение под mysql, CI GitHub Actions |
 | FEAT-006 | feat/user-dto | cbook | done | fd0e5fe | UserData DTO граница Inertia + автоген TS-типов (typescript:transform) |
+| FEAT-007 | feat/auth-hardening | cbook | done | 348396b | email-верификация, throttle register/forgot/reset, FormRequest-валидация auth |
 <!-- FEAT-MAP:END -->
 
 > Строки таблицы — `⚙️ RUNTIME`: append-only, пишутся `scripts/feat-map.sh` (или вручную под
