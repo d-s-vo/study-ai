@@ -72,6 +72,7 @@ git show <hash> | git patch-id --stable
 | cbook | f4a9d63 | 767ec0ee3f7b | FEAT-007 | 2026-07-31 | feat: включить обязательное подтверждение email при регистрации | | `cbook/f4a9d63-auth-hardening.md` |
 | cbook | 6605919 | 49d4f3e30e8c | FEAT-007 | 2026-07-31 | docs: отметить обязательное подтверждение email в инструкции запуска | | `cbook/6605919-readme-email-verification-note.md` |
 | cbook | c48543f | 634101e0ef36 | FEAT-009 | 2026-07-31 | feat: слой данных рецептов и ингредиентов | | `cbook/c48543f-recipe-data-layer.md` |
+| cbook | 73050e3 | fc611a67b819 | FEAT-009 | 2026-07-31 | refactor: единообразие типов дат в RecipeData и осмысленная проверка синхронизации ингредиентов | | `cbook/73050e3-recipe-data-timestamps-sync-test.md` |
 
 ---
 

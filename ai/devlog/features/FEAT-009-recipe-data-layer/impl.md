@@ -38,6 +38,18 @@ prevention: 'Pest arch-барьер (namespace-wide App\Models), негатив�
 2. **`RecipeDataTest` размещён в `tests/Feature/Recipe/`, не в `tests/Unit/`** — как и предусматривала сама спека (примечание: Unit не получает `RefreshDatabase`, а тесту нужна БД для фабрик).
 3. **`createForUser` создаёт рецепт через связь `User::recipes()->create()`**, а не прямым присваиванием `$recipe->user_id = $userId`. Причина: Larastan L10 выводит тип `user_id` как `int<0, max>` (из миграции `foreignId`), присваивание обычного `int` → ошибка `assign.propertyType`. Создание через relationship идиоматично, ставит FK автоматически и проходит L10 без каста/подавления.
 
+## Follow-up (ревью ADR-010 коммита c48543f — Verdict PASS без блокеров, advisory)
+
+Фикс-коммит `73050e3` (`refactor: единообразие типов дат в RecipeData и осмысленная проверка синхронизации ингредиентов`) закрыл два дешёвых advisory:
+- **RecipeData.created_at/updated_at**: `?string` → `?CarbonImmutable` — единообразие с `UserData`; TS-тип не изменился (`replaceType(CarbonImmutable → 'string')`), `generated.d.ts` перегенерирован, diff пуст.
+- **RecipeRepositoryTest sync-ассерция**: вакуумная `assertDatabaseMissing(... 'quantity'=>999)` заменена на осмысленную (фиксация исходных id + проверка их отсутствия после `update` + `assertDatabaseHas` по новым именам) — теперь ловит подмену стратегии sync.
+
+Гейты после фикса: Pest **51 passed** (189 assertions), PHPStan L10 **No errors**, Pint **passed**.
+
+Два advisory приняты **без фикса** (осознанно):
+- (а) **down()-миграций без автотеста** — откат подтверждён вручную (`migrate:rollback --step=2` + повторный `migrate` проходят); риск тривиального `dropIfExists` минимален, отдельный тест не оправдан.
+- (б) **red→green кейс-нарушитель арх-барьера для домена не добавлялся** — по spec это опционально; существующий PoC-нарушитель из FEAT-004 уже доказывает, что барьер ловит утечку моделей в слой Task.
+
 ## Ключевые решения по ходу реализации
 
 - **Маппинг вложенной коллекции DTO** — атрибут `#[DataCollectionOf(IngredientData::class)]` на `public array $ingredients`. Даёт корректный PHP-маппинг из загруженной связи и TS-тип `App.Data.IngredientData[]` (первый вложенный DTO в проекте).
