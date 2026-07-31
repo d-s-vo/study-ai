@@ -77,9 +77,8 @@ cbook (backend) — один репозиторий. Мультирепный р
 final class RecipeRepository extends BaseRepository
 {
     // Чтение → DTO/скаляр (для Resolver'ов 011)
-    public function paginateForUser(int $userId, int $perPage = 12): PaginatedDataCollection; // RecipeData, with('ingredients'), без N+1
-    public function findData(int $id): ?RecipeData;                                            // eager 'ingredients' → DTO
-    public function findModel(int $id): ?Recipe;                                               // ТОЛЬКО для authz (FEAT-010): owner-проверка Policy
+    public function paginate(int $perPage = 12): PaginatedDataCollection;  // RecipeData, ВСЕ рецепты (общий каталог), with('ingredients'), без N+1
+    public function findModel(int $id): ?Recipe;                           // authz (Policy) + источник DTO для show/edit; eager 'ingredients'
 
     // Запись (для Task'ов 010) — атомарно рецепт + ингредиенты, возвращает скаляр
     public function createForUser(int $userId, array $recipeAttributes, array $ingredients): int; // id нового рецепта
@@ -90,7 +89,7 @@ final class RecipeRepository extends BaseRepository
 - `createForUser`/`update` оборачивают запись в `DB::transaction(...)` (`DB` — легально, это репозиторий); ингредиенты синхронизируются стратегией delete+insert по `recipe_id` (простая консистентная стратегия для композиции без собственного ЖЦ).
 - Маппинг модель→DTO (`RecipeData::from`/`::collect`) делается **внутри репозитория** (единственный слой, легально держащий и модель, и DTO) — наружу уходит уже DTO.
 - Именование методов — согласовать со стилем существующего `UserRepository` (сверить при импле; там методы `create`/`updateProfile`/`delete` с `Authenticatable` + `assert`).
-- `findModel` — узкий метод под авторизацию FEAT-010; в 009 он определён и покрыт тестом (возвращает модель по id или `null`), но потребитель (Policy/контроллер) появляется в 010.
+- `findModel` — метод под авторизацию (Policy, FEAT-010) и под сборку DTO для страниц show/edit (FEAT-011): eager-load `ingredients`, возвращает модель по id или `null`. В 009 определён и покрыт тестом; потребители (Policy/контроллер/резолвер) — в 010/011.
 
 ### DTO (Spatie Data — контракт «наружу»)
 - `app/Data/IngredientData.php`:
@@ -137,13 +136,13 @@ final class RecipeRepository extends BaseRepository
 
 ## Тесты
 **Добавить:**
-- `tests/Feature/Recipe/RecipeRepositoryTest.php` (репозиторий резолвится `app(RecipeRepository::class)` в `beforeEach`, как `UserRepositoryTest`) — `createForUser` создаёт рецепт с N ингредиентами (одной транзакцией, `assertDatabaseHas`); `update` синхронизирует ингредиенты (было 3 → стало 2); `delete` удаляет рецепт **и** его ингредиенты (каскад — `assertDatabaseMissing` 0 строк в `ingredients`); `findData` грузит связь без N+1 (`Model::preventLazyLoading()` в тесте — исключение при ленивой загрузке); `paginateForUser` возвращает только рецепты владельца (создать 2 юзеров, проверить изоляцию); `findModel` возвращает модель по id и `null` по несуществующему.
+- `tests/Feature/Recipe/RecipeRepositoryTest.php` (репозиторий резолвится `app(RecipeRepository::class)` в `beforeEach`, как `UserRepositoryTest`) — `createForUser` создаёт рецепт с N ингредиентами (одной транзакцией, `assertDatabaseHas`), проставляя `user_id` владельца; `update` синхронизирует ингредиенты (было 3 → стало 2); `delete` удаляет рецепт **и** его ингредиенты (каскад — `assertDatabaseMissing` 0 строк в `ingredients`); `paginate` возвращает **все** рецепты (общий каталог — создать рецепты от 2 юзеров, проверить, что в выборке присутствуют оба) и грузит `ingredients` без N+1 (`Model::preventLazyLoading()` в тесте — исключение при ленивой загрузке); `findModel` возвращает модель по id (с загруженными `ingredients` и `user_id` для authz) и `null` по несуществующему.
 - `tests/Unit/RecipeDataTest.php` — `RecipeData::from(Recipe::factory()->has(Ingredient::factory()->count(2))->create())` даёт корректные поля; `steps` — массив строк; `difficulty` — `Difficulty`; `ingredients` — 2× `IngredientData`; поле `user_id` в `->toArray()` DTO **отсутствует** (негативная проверка утечки владельца). (`tests/Unit` сейчас пуст — `RefreshDatabase` не применяется к Unit по `Pest.php`; если тесту нужна БД для фабрик — размещать в `tests/Feature/Recipe/`.)
 - `tests/Feature/Recipe/RecipeCascadeTest.php` (или в RepositoryTest) — удаление `User` → каскад удаляет его рецепты и их ингредиенты (проверка FK-цепочки `users → recipes → ingredients`).
 **Обновить:** `tests/Feature/ArchitectureTest.php` — правило `expect('App\Models')->toOnlyBeUsedIn([...])` **namespace-wide**, новые модели `Recipe`/`Ingredient` покрыты автоматически (allow-list не меняется в 009 — репозиторий уже в `App\Data\Repositories`). Правку allow-list (`+App\Policies`) делает **FEAT-010**. Опционально — добавить red→green кейс-нарушитель для домена (по образцу `DummyTask` из FEAT-004), подтверждающий, что барьер ловит утечку `Recipe` в Task.
 **Удалить:** нет.
 
-> Слой данных с владельцем: обязателен тест **изоляции по владельцу** (`paginateForUser` не отдаёт чужие рецепты) и **негативная** проверка неутечки `user_id` в DTO. Полные негативные тесты прав (403) — в FEAT-010 (там появляется Policy/маршруты).
+> Слой данных: `user_id` проставляется владельцем на создании (основа authz мутаций); обязательна **негативная** проверка неутечки `user_id` в DTO. Просмотр — общий каталог (`paginate` отдаёт все рецепты), поэтому owner-изоляция применяется к мутациям, а не к чтению. Полные негативные тесты прав (403 на чужие update/delete/edit) — в FEAT-010/011.
 
 ## Типизация/качество
 - Гейты: `sail bin phpstan analyse` (L10, 0 подавлений — casts/связи типизируются генериками Eloquent-хелперов; при необходимости PHPDoc-generics `HasMany<Ingredient>`), `sail bin pint --test`, `sail artisan test`.
@@ -152,7 +151,7 @@ final class RecipeRepository extends BaseRepository
 
 ## Безопасность
 - **Доступы:** новых маршрутов/endpoint нет — это слой данных. Policy/authorize вводятся в FEAT-010. Здесь важно заложить `user_id` для будущей изоляции.
-- **Данные (IDOR-фундамент):** `user_id` — FK владельца; `RecipeRepository::paginateForUser` фильтрует по владельцу (изоляция). `RecipeData` **не** экспонирует `user_id` наружу (внутреннее поле). Негативный тест на неутечку — обязателен.
+- **Данные (IDOR-фундамент):** `user_id` — FK владельца; заложен для authz **мутаций** (Policy в 010). Просмотр — общий каталог (`paginate` = все рецепты), поэтому owner-фильтрации на чтении нет — изоляция по владельцу действует на update/delete/edit. `RecipeData` **не** экспонирует `user_id` наружу (внутреннее поле). Негативный тест на неутечку — обязателен.
 - **Mass assignment:** `user_id` (recipes) и `recipe_id` (ingredients) **исключены из `$fillable`** — владелец/родитель проставляются кодом (репозиторий/связь), а не из пользовательского ввода. Это блокирует попытку подмены владельца через payload.
 - **Валидация:** входной валидации ещё нет (FormRequest — FEAT-010); фабрики/репозиторий работают с доверенными данными тестов. Боевые креды в тестах не используются (`.env.testing`).
 - **Гигиена §8:** модели/DTO/миграции/тесты — человеческий стиль, без следов системы.
