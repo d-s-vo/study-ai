@@ -6,16 +6,16 @@ feat: FEAT-006
 branch: feat/user-dto
 reviewer_model: Opus 4.8
 review_date: 2026-07-31
-verdict: FAIL
+verdict: PASS
 blockers_total: 1
-blockers_open: 1
-resolved_by: []
+blockers_open: 0
+resolved_by: [7ff6cf8]
 ---
 
 # cbook@fd0e5fe — REVIEW — feat: отдавать текущего пользователя в Inertia через DTO и генерировать TS-типы из слоя данных
 
-**Verdict:** FAIL
-**Blocking findings:**
+**Verdict:** PASS (итог цепочки fd0e5fe + фикс 7ff6cf8; исходный вердикт коммита был FAIL — см. журнал)
+**Blocking findings (исходные, закрыты):**
 - `bootstrap/providers.php:10` (+ `app/Providers/TypeScriptTransformerServiceProvider.php:14`) — провайдер зарегистрирован **безусловно**, но его базовый класс `Spatie\LaravelTypeScriptTransformer\TypeScriptTransformerApplicationServiceProvider` живёт в пакете `spatie/laravel-typescript-transformer`, который в `composer.lock` числится в **`packages-dev`** (require-dev). В прод-сборке (`composer install --no-dev`) пакет удаляется → базового класса в `vendor/` нет. Laravel инстанцирует ВСЕ провайдеры из `bootstrap/providers.php` безусловно (на каждом запросе и в `artisan optimize`/`config:cache`/`package:discover`); PHP обязан разрешить родительский класс в момент объявления дочернего → автолоад падает → **Fatal error: Class "Spatie\LaravelTypeScriptTransformer\TypeScriptTransformerApplicationServiceProvider" not found**. Evidence-контрпример: `composer install --no-dev` сам запускает post-autoload-dump `@php artisan package:discover` → бут фреймворка → инстанцирование провайдера → фатал ещё на этапе установки зависимостей; далее — любой HTTP-запрос в проде не поднимается. Это прямо **противоречит собственному AC спеки** («require-dev … прод не нужен, т.к. `generated.d.ts` коммитится»): интент — прод НЕ зависит от пакета, а реализация делает прод-бут ЖЁСТКО зависимым от dev-пакета и роняет его без него.
 
 **Non-blocking notes:**
@@ -33,7 +33,7 @@ resolved_by: []
 - **Гигиена §8 / чистота:** стоп-словарь `githooks/stopwords.txt` по клиентскому дифу (`grep -iE`) — **чисто, 0 совпадений**. Сообщение коммита `feat: отдавать текущего пользователя в Inertia через DTO и генерировать TS-типы из слоя данных` — conventional (`feat:`), «от лица человека», без следов системы/FEAT-номеров.
 - **Атомарность:** один логический смысл (DTO наружу + автоген типов + null-safety потребителей + тесты); фикс+фича не смешаны. OK.
 
-**Suggested next:** fix-now (fix-forward-FEAT-006, та же ветка)
+**Suggested next:** none (исходно fix-now — выполнен фиксом `7ff6cf8`, см. журнал)
 
 ## Рубрика (бинарно, commit-review.md §3)
 
@@ -47,8 +47,8 @@ resolved_by: []
 
 ## Журнал закрытия находок
 
-- **Blocking #1** (`bootstrap/providers.php:10` — безусловная регистрация провайдера с dev-only базовым классом) → ОТКРЫТ. Направление фикса (мелкий, в той же фиче, приводит к уже записанному AC — спека-дельта не нужна): регистрировать провайдер условно — например только вне production (`App::runningUnitTests()`/`!app()->isProduction()`) или через `class_exists(...)`-гард, либо вынести регистрацию из безусловного `bootstrap/providers.php` в `AppServiceProvider::register()` под условием. `generated.d.ts` коммитится → прод кодоген не нужен, потому провайдер в проде не требуется вовсе. После фикс-коммита — узкое ревью §6 (закрыта ли находка + нет ли регрессии), снятие FAIL-veto — только исходным ревьюером.
-- **Nit/minor** (altitude-gap теста) → advisory: закрыть тем же фикс-коммитом (`->missing('auth.user.created_at')`) либо принять с записью.
+- **Blocking #1** (`bootstrap/providers.php:10` — безусловная регистрация провайдера с dev-only базовым классом) → **закрыт фиксом `7ff6cf8`** (`fix: не регистрировать генератор ts-типов в проде`): провайдер убран из `bootstrap/providers.php`, регистрация перенесена в `AppServiceProvider::register()` под гард `class_exists(TypeScriptTransformerApplicationServiceProvider::class)`. Узкое повторное ревью тем же ревьюером (§6, 2026-07-31, `7ff6cf8-review.md`): гард корректен (`use`-импорт и `::class` НЕ триггерят автолоад; `class_exists` чисто возвращает false без пакета; дочерний класс в проде никогда не загружается); прод-сценарий доказан живьём (`composer install --no-dev` EXIT 0, `artisan optimize` чист, vendor без пакета); регрессий нет. FAIL-veto снят.
+- **WARN/minor** (altitude-gap теста) → **закрыт тем же фиксом `7ff6cf8`**: в guest/authed Inertia-тесты добавлены `missing('auth.user.created_at'/'updated_at')` — мутация «DTO → сырая модель» теперь ловится (timestamps не в `$hidden`).
 
 ## Связи
 
