@@ -84,6 +84,7 @@
   - [ ] Задача 1b и далее — домен Recipe/Ingredient, миграции MySQL 8, Filament 5, media.
   - [ ] Долг (advisory ревью FEAT-004, `e0c8ee3-review.md`): `HandleInertiaRequests` отдаёт в Inertia сырую модель `User` (STRICT RULE 4 «только DTO наружу») — обернуть в DTO (Spatie Data) в доменной фазе.
 - [ ] Уточнить у владельца: CI на `develop` (настроен ли pipeline); дисковый драйвер для `whyme-agency/laravel-media` (локальный/S3) — `(уточнить)`.
+- [ ] Уточнить у владельца: включать ли **email-верификацию** (`User implements MustVerifyEmail` — начнут уходить реальные письма при регистрации). Всплыло в ревью FEAT-007 (`a1f6c53-review.md`): Breeze-скаффолд несёт verify-роуты, но User контракт не реализует — флоу дремлет. Решение продуктовое, в FEAT-007 сознательно не принималось (фикс сохранил поведение e0c8ee3).
 - [x] ~~Финальный выбор СУБД~~ — снят ТЗ: **MySQL 8** (Sail-сервис `mysql`, порт 3306).
 
 ---
