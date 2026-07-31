@@ -2,10 +2,10 @@
   "feat": "FEAT-010",
   "branch": "feat/recipe-crud",
   "repo": "cbook",
-  "status": "in-progress",
+  "status": "done",
   "adr": null,
   "commit": "632c4aa",
-  "desc": "CRUD-мутации рецептов: Tasks, FormRequests, RecipePolicy (анти-IDOR), маршруты; /profile под verified; передано на доставку (632c4aa)",
+  "desc": "CRUD-мутации рецептов: Tasks, FormRequests, RecipePolicy (анти-IDOR), маршруты; /profile под verified (632c4aa, merged → develop ff)",
   "created": "2026-07-31T16:31:06Z",
-  "updated": "2026-07-31T16:31:06Z"
+  "updated": "2026-07-31T17:01:23Z"
 }
