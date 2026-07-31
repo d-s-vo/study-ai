@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-31T12:22:20Z",
+  "updated": "2026-07-31T13:10:35Z",
   "repos": {
     "cbook": {
       "type": "bare",
@@ -7,40 +7,7 @@
       "base_local": "18c7282",
       "base_origin": "18c7282",
       "behind": 0,
-      "tasks": {
-        "auth-hardening": {
-          "branch": "feat/auth-hardening",
-          "head": "6605919",
-          "ahead": 0,
-          "behind": 9,
-          "delivered": false,
-          "merged": true
-        },
-        "frontend-hygiene": {
-          "branch": "feat/frontend-hygiene",
-          "head": "348396b",
-          "ahead": 0,
-          "behind": 11,
-          "delivered": false,
-          "merged": true
-        },
-        "infra-toolchain": {
-          "branch": "feat/infra-toolchain",
-          "head": "1ff25df",
-          "ahead": 0,
-          "behind": 9,
-          "delivered": false,
-          "merged": true
-        },
-        "user-dto": {
-          "branch": "feat/user-dto",
-          "head": "7ff6cf8",
-          "ahead": 0,
-          "behind": 10,
-          "delivered": false,
-          "merged": true
-        }
-      }
+      "tasks": {}
     }
   }
 }

@@ -1,0 +1,19 @@
+{
+  "slug": "recipe-data-layer",
+  "feat": "FEAT-009",
+  "adr": null,
+  "repo": "cbook",
+  "branch": "feat/recipe-data-layer",
+  "status": "spec",
+  "agent": "manual-59416",
+  "account": "default",
+  "index": 1,
+  "ports": {
+    "backend": 8110,
+    "frontend": 5183,
+    "aux": 3110
+  },
+  "redis_db": 5,
+  "created": "2026-07-31T13:16:10Z",
+  "updated": "2026-07-31T13:16:40Z"
+}

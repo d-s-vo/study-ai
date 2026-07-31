@@ -1,0 +1,19 @@
+{
+  "slug": "recipe-crud",
+  "feat": "FEAT-010",
+  "adr": null,
+  "repo": "cbook",
+  "branch": "feat/recipe-crud",
+  "status": "spec",
+  "agent": "manual-59416",
+  "account": "default",
+  "index": 2,
+  "ports": {
+    "backend": 8120,
+    "frontend": 5193,
+    "aux": 3120
+  },
+  "redis_db": 6,
+  "created": "2026-07-31T13:16:10Z",
+  "updated": "2026-07-31T13:16:33Z"
+}

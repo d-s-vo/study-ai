@@ -1,0 +1,19 @@
+{
+  "slug": "recipe-pages",
+  "feat": "FEAT-011",
+  "adr": null,
+  "repo": "cbook",
+  "branch": "feat/recipe-pages",
+  "status": "spec",
+  "agent": "manual-59416",
+  "account": "default",
+  "index": 3,
+  "ports": {
+    "backend": 8130,
+    "frontend": 5203,
+    "aux": 3130
+  },
+  "redis_db": 7,
+  "created": "2026-07-31T13:16:10Z",
+  "updated": "2026-07-31T13:16:33Z"
+}
