@@ -85,6 +85,17 @@ README обновлён (pnpm + перечень сервисов Redis/Mailpit 
 разработчика. Клиентский `CLAUDE.md` в worktree отсутствует; корневой стек-контекст расхождений не
 даёт (Sail/MySQL/Redis/Mailpit уже описаны).
 
+## Фикс по коммит-ревью (74fe7ab → FAIL, блокер)
+**Блокер:** `.github/workflows/ci.yml` — оба шага `uses: pnpm/action-setup@v4` (job'ы `tests` и
+`frontend`) были без входа `version:`, а `package.json` не содержит поля `packageManager` → по
+документации action-setup v4 шаг Setup pnpm падает, CI красный на любом PR/push.
+
+**Фикс — коммит `cc3df94`** (`fix: указать версию pnpm в CI`, 1 файл, +4): к обоим шагам добавлено
+`with: version: 10`. Мажор выбран по факту: локально pnpm **10.30.3**, `pnpm-lock.yaml`
+`lockfileVersion: '9.0'` — pnpm 10 читает его и уже прогнал `pnpm install --frozen-lockfile` зелёным
+(sanity выше). `package.json` не тронут (зона другой работы). YAML провалидирован (`yq`: 4 job'а
+парсятся). Больше ничего не менялось.
+
 ## Итог
 Локальный стенд и тулчейн приведены к ТЗ: Redis+Mailpit подняты и доказаны вживую, тестовый контур
 жёстко на MySQL (`DB_CONNECTION` явно), гейты `lint`/`analyse`/`test` в composer, npm→pnpm, CI на
