@@ -74,6 +74,7 @@ git show <hash> | git patch-id --stable
 | cbook | c48543f | 634101e0ef36 | FEAT-009 | 2026-07-31 | feat: слой данных рецептов и ингредиентов | | `cbook/c48543f-recipe-data-layer.md` |
 | cbook | 73050e3 | fc611a67b819 | FEAT-009 | 2026-07-31 | refactor: единообразие типов дат в RecipeData и осмысленная проверка синхронизации ингредиентов | | `cbook/73050e3-recipe-data-timestamps-sync-test.md` |
 | cbook | 632c4aa | 5bf0c20fd240 | FEAT-010 | 2026-07-31 | feat: мутации рецептов с проверкой владельца | | `cbook/632c4aa-recipe-crud.md` |
+| cbook | 6116cff | 98fda3cd0cb8 | FEAT-011 | 2026-08-03 | feat: страницы рецептов с общим каталогом и пагинацией | | `cbook/6116cff-recipe-pages.md` |
 
 ---
 
@@ -124,3 +125,4 @@ git show <hash> | git patch-id --stable
 | cbook | c48543f | FEAT-009 | PASS | — | 2026-07-31 | `cbook/c48543f-review.md` |
 | cbook | 73050e3 | FEAT-009 | PASS | — | 2026-07-31 | `cbook/73050e3-review.md` |
 | cbook | 632c4aa | FEAT-010 | PASS | — | 2026-07-31 | `cbook/632c4aa-review.md` |
+| cbook | 6116cff | FEAT-011 | PASS | — | 2026-08-03 | `cbook/6116cff-review.md` |
