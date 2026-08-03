@@ -29,6 +29,8 @@
 
 > **Минимальный набор гейтов** (M3 quality-ratchet в профиле выключен): тесты (Pest) + статанализ (**PHPStan Level 10** — на нём же ловится нарушение изоляции Eloquent и слоёв) + lint (Pint). После изменения DTO — прогнать `artisan typescript:transform`, чтобы TS-типы не разъехались. Прогоняются вручную; тяжёлые прогоны сериализуй через `./scripts/gate.sh <ресурс> -- <команда>` (имена ресурсов `build | test | migrate`), чтобы параллельные агенты не били по общей RAM/CPU.
 
+> **ESLint и ambient `App.*`-типы:** сгенерированные Spatie-типы (`App.Data.*`/`App.Enums.*`) при первом потреблении в `.vue` дают ложный `no-undef` — ESLint не резолвит ambient TS-globals. Канон: `no-undef: off` для ts/vue в `eslint.config.js`, резолвинг типов делегирован `vue-tsc --noEmit` (вскрыто FEAT-011, ретро Recipe).
+
 > Однопроектный стек — один столбец backend + один frontend. `./vendor/bin/sail` можно завести под алиас `sail`.
 
 ### venv / изоляция тулчейна — ОБЯЗАТЕЛЬНАЯ секция
