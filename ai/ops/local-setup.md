@@ -34,6 +34,15 @@
 Суперпользователь/тестовый аккаунт: (уточнить) — сидер под тестовую учётку на момент инициализации
 не задокументирован.
 
+> **Параллельные worktree-стенды (`tasks/<slug>/`).** Порты выше — дефолтного стенда из корня.
+> Стенд задачи НЕ должен занимать те же хост-порты. Источник истины сдвига — бронь `coord.sh book`
+> (поля `ports.backend/frontend/aux` и `redis_db`; формула `база + index*10` — в `scripts/coord.sh`
+> `cmd_book`, см. `ai/guides/coordination.md`). Для Sail проброс хост-портов задаётся `FORWARD_*`
+> в `.env` worktree: `APP_PORT` = `ports.backend`, Vite = `ports.frontend`, `FORWARD_REDIS_PORT` /
+> `FORWARD_MAILPIT_PORT` (и `FORWARD_MAILPIT_DASHBOARD_PORT`) сдвигать от базы (6379/1025/8025),
+> чтобы параллельный стенд не конфликтовал с дефолтным; изоляция Redis — по `redis_db` брони.
+> НЕ выводить сдвиг формулой на глаз — брать из брони (вскрыто в волне Recipe FEAT-009…011).
+
 ## Ключевые файлы
 
 - `docker-compose.yml` (генерируется Sail) — инфраструктурные сервисы (app, mysql, redis, mailpit).
