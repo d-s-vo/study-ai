@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-31T17:00:35Z",
+  "updated": "2026-08-03T05:13:07Z",
   "repos": {
     "cbook": {
       "type": "bare",
@@ -7,17 +7,7 @@
       "base_local": "632c4aa",
       "base_origin": "632c4aa",
       "behind": 0,
-      "tasks": {
-        "recipe-crud": {
-          "branch": "feat/recipe-crud",
-          "head": "632c4aa",
-          "feat": "FEAT-010",
-          "ahead": 0,
-          "behind": 0,
-          "delivered": false,
-          "merged": true
-        }
-      }
+      "tasks": {}
     }
   }
 }
