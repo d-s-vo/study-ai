@@ -1,0 +1,19 @@
+{
+  "slug": "filament-admin",
+  "feat": "FEAT-013",
+  "adr": "ADR-011",
+  "repo": "cbook",
+  "branch": "feat/filament-admin",
+  "status": "spec",
+  "agent": "manual-17710",
+  "account": "default",
+  "index": 1,
+  "ports": {
+    "backend": 8110,
+    "frontend": 5183,
+    "aux": 3110
+  },
+  "redis_db": 5,
+  "created": "2026-08-03T08:30:44Z",
+  "updated": "2026-08-03T08:39:27Z"
+}
