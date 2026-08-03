@@ -4,7 +4,7 @@
   "adr": null,
   "repo": "cbook",
   "branch": "feat/recipe-docs",
-  "status": "verify",
+  "status": "merged",
   "agent": "manual-98070",
   "account": "default",
   "index": 1,
@@ -15,5 +15,5 @@
   },
   "redis_db": 5,
   "created": "2026-08-03T07:40:41Z",
-  "updated": "2026-08-03T07:44:27Z"
+  "updated": "2026-08-03T07:53:58Z"
 }

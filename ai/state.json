@@ -1,20 +1,20 @@
 {
-  "updated": "2026-08-03T07:44:54Z",
+  "updated": "2026-08-03T07:53:21Z",
   "repos": {
     "cbook": {
       "type": "bare",
       "base": "develop",
-      "base_local": "6116cff",
-      "base_origin": "6116cff",
+      "base_local": "8db26fa",
+      "base_origin": "8db26fa",
       "behind": 0,
       "tasks": {
         "recipe-docs": {
           "branch": "feat/recipe-docs",
           "head": "8db26fa",
-          "ahead": 1,
+          "ahead": 0,
           "behind": 0,
           "delivered": false,
-          "merged": false
+          "merged": true
         }
       }
     }
