@@ -39,7 +39,7 @@ FEAT-NNN-slug/
 | FEAT-008 | feat/frontend-hygiene | cbook | done | 348396b | ESLint flat-config, pnpm lint/typecheck, фронт-гигиена |
 | FEAT-009 | feat/recipe-data-layer | cbook | done | 73050e3 | слой данных Recipe/Ingredient: миграции (user_id, каскады), модели, Difficulty, RecipeRepository, DTO+TS-типы (c48543f+73050e3) |
 | FEAT-010 | feat/recipe-crud | cbook | done | 632c4aa | CRUD-мутации рецептов: Tasks, FormRequests, RecipePolicy (анти-IDOR), маршруты; /profile под verified (632c4aa, merged → develop ff) |
-| FEAT-011 | feat/recipe-pages | cbook | in-progress | 6116cff | Страницы рецептов: Page Resolvers, Inertia Vue index/create/show/edit, общий каталог, пагинация, canUpdate |
+| FEAT-011 | feat/recipe-pages | cbook | done | 6116cff | Страницы рецептов: Page Resolvers, Inertia Vue index/create/show/edit, общий каталог, пагинация, canUpdate |
 <!-- FEAT-MAP:END -->
 
 > Строки таблицы — `⚙️ RUNTIME`: append-only, пишутся `scripts/feat-map.sh` (или вручную под
