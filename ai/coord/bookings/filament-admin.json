@@ -4,7 +4,7 @@
   "adr": "ADR-011",
   "repo": "cbook",
   "branch": "feat/filament-admin",
-  "status": "spec",
+  "status": "impl",
   "agent": "manual-17710",
   "account": "default",
   "index": 1,
@@ -15,5 +15,5 @@
   },
   "redis_db": 5,
   "created": "2026-08-03T08:30:44Z",
-  "updated": "2026-08-03T08:39:27Z"
+  "updated": "2026-08-03T11:20:50Z"
 }
