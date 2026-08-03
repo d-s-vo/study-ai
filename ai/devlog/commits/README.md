@@ -75,6 +75,7 @@ git show <hash> | git patch-id --stable
 | cbook | 73050e3 | fc611a67b819 | FEAT-009 | 2026-07-31 | refactor: единообразие типов дат в RecipeData и осмысленная проверка синхронизации ингредиентов | | `cbook/73050e3-recipe-data-timestamps-sync-test.md` |
 | cbook | 632c4aa | 5bf0c20fd240 | FEAT-010 | 2026-07-31 | feat: мутации рецептов с проверкой владельца | | `cbook/632c4aa-recipe-crud.md` |
 | cbook | 6116cff | 98fda3cd0cb8 | FEAT-011 | 2026-08-03 | feat: страницы рецептов с общим каталогом и пагинацией | | `cbook/6116cff-recipe-pages.md` |
+| cbook | 8db26fa | ec155a431b39 | FEAT-011 | 2026-08-03 | docs: описание раздела «Рецепты» в README | | `cbook/8db26fa-recipe-docs.md` |
 
 ---
 
