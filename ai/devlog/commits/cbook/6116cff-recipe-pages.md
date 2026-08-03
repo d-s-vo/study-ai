@@ -5,7 +5,7 @@ patch_id: 98fda3cd0cb88c295a252e16e19323db72698274
 branch: feat/recipe-pages
 feat: FEAT-011
 date: 2026-08-03
-final_hash:                   # best-effort, заполнить при обнаружении после merge MR
+final_hash: 6116cff              # ff-merge в develop, хэш не изменился
 ---
 
 # cbook@6116cff — страницы рецептов с общим каталогом и пагинацией

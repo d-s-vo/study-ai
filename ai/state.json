@@ -1,13 +1,23 @@
 {
-  "updated": "2026-08-03T05:13:07Z",
+  "updated": "2026-08-03T07:34:26Z",
   "repos": {
     "cbook": {
       "type": "bare",
       "base": "develop",
-      "base_local": "632c4aa",
-      "base_origin": "632c4aa",
+      "base_local": "6116cff",
+      "base_origin": "6116cff",
       "behind": 0,
-      "tasks": {}
+      "tasks": {
+        "recipe-pages": {
+          "branch": "feat/recipe-pages",
+          "head": "6116cff",
+          "feat": "FEAT-011",
+          "ahead": 0,
+          "behind": 0,
+          "delivered": true,
+          "merged": true
+        }
+      }
     }
   }
 }
