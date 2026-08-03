@@ -1,0 +1,11 @@
+{
+  "feat": "FEAT-011",
+  "branch": "feat/recipe-pages",
+  "repo": "cbook",
+  "status": "in-progress",
+  "adr": null,
+  "commit": "6116cff",
+  "desc": "Страницы рецептов: Page Resolvers, Inertia Vue index/create/show/edit, общий каталог, пагинация, canUpdate",
+  "created": "2026-08-03T05:47:31Z",
+  "updated": "2026-08-03T05:47:31Z"
+}
