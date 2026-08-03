@@ -608,6 +608,14 @@ updated … / checked, no changes needed because … / needs product-owner revie
 □ Конкретные гайды ai/guides/ — если изменился workflow
 □ ai/infra/ — если фича затрагивает инфраструктуру (см. Шаг 11)
 □ пользовательская документация (user-visible изменения отражать в клиентском CLAUDE.md / README проекта) — если user-visible изменение (+ строка в impl.md)
+□ ai/process-metrics/adr-<NNN>.jsonl — фича В СОСТАВЕ ИНИЦИАТИВЫ (adr-execution.md): при
+   закрытии ФИЧИ ДОПИШИ строку в леджер инициативы (append-only; формат — [`./process-retro.md`](./process-retro.md) §б):
+   ключи feat/adr/role/model, tokens по ролям, петли red→green, merge-конфликты, стадия поимки
+   дефектов, нарушения канонов. Нет значения → null, но КЛЮЧ обязан быть.
+   (в делегированном режиме tokens дописывает ОРКЕСТРАТОР — usage виден ему при завершении
+   субагента; исполнитель отдаёт role/model/петли/стадию/нарушения). Решением владельца
+   2026-08-03 леджер ОБЯЗАТЕЛЕН начиная со следующей инициативы; полноту сверяй
+   `scripts/ledger-check.sh` (warn-only, --strict → exit 1).
 ```
 
 ---
