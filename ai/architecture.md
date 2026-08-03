@@ -259,8 +259,9 @@ study-cbook-ai/                  # workspace (не репозиторий)
 | 002 | Принят | Целевой стек: Laravel 12 + PHP 8.4 + MySQL 8 + Filament 5 + Inertia/Vue 3 (TS strict) + Spatie Data + Tailwind, Sail | [`adr/002-stack-laravel-filament-inertia.md`](adr/002-stack-laravel-filament-inertia.md) |
 | 003 | Принят | Строгая слоистая архитектура (Controller→Task→Repository→DTO→Resolver→Inertia; Eloquent только в `app/Data/Repositories/*`, enforced PHPStan L10) | [`adr/003-layered-architecture.md`](adr/003-layered-architecture.md) |
 | 006 | Принят | Переписывание cbook с нуля на Laravel ради обучения (greenfield; Nuxt = донор идеи+BVI) | [`adr/006-migration-nuxt-to-laravel.md`](adr/006-migration-nuxt-to-laravel.md) |
+| 011 | Реализован | Граница Filament-админки и изоляции Eloquent (подход C: чтение модели в `App\Filament`, мутации через Tasks; allow-list rule #1 += `App\Filament`, `DB`-guard сохранён; супер-доступ админа через `RecipePolicy::before`) | [`adr/011-filament-admin-boundary.md`](adr/011-filament-admin-boundary.md) |
 
-> Свободные номера 007 и далее — под будущие продуктовые ADR. Номера 005/008 исторически занимали системные ADR отключённых модулей (M5/M3) и не переиспользуются. Системные ADR (001/004/009/010) не перенумеровывать.
+> Свободные номера 012 и далее — под будущие продуктовые ADR (007…010 заняты; 011 — Filament-граница). Номера 005/008 исторически занимали системные ADR отключённых модулей (M5/M3) и не переиспользуются. Системные ADR (001/004/009/010) не перенумеровывать.
 
 Детали — в [`adr/`](adr/).
 

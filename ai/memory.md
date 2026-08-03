@@ -69,6 +69,8 @@
 
 **Обновление 2026-08-03 (решение владельца — метрик-леджер M7):** метрик-леджер process-retro (M7) переведён из опционального в **ОБЯЗАТЕЛЬНЫЙ начиная со следующей инициативы** (основание — первое ретро `process-metrics/retro-recipe-domain.md`: срезы экономики субагентов и калибровки моделей дали WARN «не измерено» без замеров). Дополнен DoD закрытия фичи (`guides/feature-workflow.md` Шаг 10 — строка в `process-metrics/adr-<NNN>.jsonl` с ключами feat/adr/role/model + метрики, null допустим); помечена §б `guides/process-retro.md`; заведён чекер полноты `scripts/ledger-check.sh` (warn-only, `--strict` → exit 1). Прежняя gotcha «M7 отложен» — снята этим решением для следующей инициативы.
 
+**Обновление 2026-08-03 (вечер): FEAT-013 filament-admin — реализована, ветка `feat/filament-admin` (базис develop@`8db26fa`), ждёт доставки владельцем (`deliver.sh cbook feat/filament-admin` → MR в develop).** Установлен **Filament v5.7.5**, панель `/admin` поверх строгой слоистой архитектуры. Доступ — `canAccessPanel = is_admin && hasVerifiedEmail()` (миграция `is_admin` bool default false; **вне `$fillable`** — анти mass-assignment; bootstrap первого админа — команда `app:grant-admin {email}`). Ресурсы: **RecipeResource** (полный CRUD; чтение через модель, мутации через существующие Tasks Create/Update/Delete — транзакции сохранены) + **UserResource** (read-only, без экспонирования password/токенов). **Супер-доступ админа** — `RecipePolicy::before` (true для админа, null иначе — owner-scoping FEAT-010 не ослаблен). **decision-ADR-011** (подход C): allow-list арх-барьера rule #1 += `App\Filament` (red→green доказан), rule #2 (`DB`-фасад) НЕ тронуто. Ингредиенты — form Repeater вместо RelationManager (обоснованное отклонение: атомарный create+ingredients через Task, полная sync в UpdateRecipeTask, Ingredient как композиция агрегата). Гейты: **Pest 95/410 (0 fail)**, PHPStan L10 0 err/0 подавлений (`app/Filament` в paths), Pint, `pnpm build`/`lint`/`vue-tsc` зелёные (публичный Inertia-фронт Tailwind v3 не затронут — Filament на своём ассет-пайплайне; vendor-JS Filament исключён из ESLint). Живая приёмка curl на :8110 (эфемерная БД) PASS: гость→302 login, админ→200, супер-доступ виден, не-админ→403, password-хеш не течёт. Метрик-леджер M7: заведён `process-metrics/adr-006.jsonl` (первая строка, `tokens` допишет оркестратор). НЕ сделано (зона оркестратора/пользователя): ADR-010-ревью + ревью чистоты свежими субагентами, доставка. Детали — `devlog/features/FEAT-013-filament-admin/impl.md`; разборы — `devlog/commits/cbook/<hash>-*` (6 коммитов).
+
 ---
 
 ## Реализовано
@@ -137,8 +139,8 @@
 
 > Опциональные сквозные счётчики (следующий свободный FEAT-номер, последний ADR и т.п.) — чтобы не сверяться каждый раз вручную.
 
-- Следующий свободный FEAT: FEAT-009 (FEAT-005…008 = инфра/CI + DTO-граница + auth-hardening + фронт-гигиена, merged → develop 2026-07-31, `18c7282`; маппинг восстановлен в features/README.md 2026-07-31)
-- Последний ADR: 010 (системный); последний продуктовый — 006; следующий свободный продуктовый — 007
+- Следующий свободный FEAT: FEAT-014 (FEAT-009…011 домен Recipe merged; FEAT-012 не использован — переименован в FEAT-013 при постановке; FEAT-013 filament-admin реализована, ждёт доставки)
+- Последний ADR: 011 (продуктовый, Filament-граница, Реализован); последний системный — 010; следующий свободный продуктовый — 012
 
 ---
 
