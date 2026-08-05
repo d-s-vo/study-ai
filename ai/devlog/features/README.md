@@ -40,7 +40,7 @@ FEAT-NNN-slug/
 | FEAT-009 | feat/recipe-data-layer | cbook | done | 73050e3 | слой данных Recipe/Ingredient: миграции (user_id, каскады), модели, Difficulty, RecipeRepository, DTO+TS-типы (c48543f+73050e3) |
 | FEAT-010 | feat/recipe-crud | cbook | done | 632c4aa | CRUD-мутации рецептов: Tasks, FormRequests, RecipePolicy (анти-IDOR), маршруты; /profile под verified (632c4aa, merged → develop ff) |
 | FEAT-011 | feat/recipe-pages | cbook | done | 6116cff | Страницы рецептов: Page Resolvers, Inertia Vue index/create/show/edit, общий каталог, пагинация, canUpdate |
-| FEAT-013 | feat/filament-admin | cbook | in-progress | 41267e7 | Filament 5 админка /admin: доступ по is_admin (+verified), RecipeResource (CRUD через Tasks) + UserResource (read-only), супер-доступ админа (RecipePolicy::before), ADR-011; ждёт доставки |
+| FEAT-013 | feat/filament-admin | cbook | done | 6ed5bc1 | Filament 5 админка /admin: is_admin (+verified), RecipeResource (CRUD через Tasks) + UserResource (read-only), супер-доступ RecipePolicy::before, decision-ADR-011 |
 <!-- FEAT-MAP:END -->
 
 > Строки таблицы — `⚙️ RUNTIME`: append-only, пишутся `scripts/feat-map.sh` (или вручную под

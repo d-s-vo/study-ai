@@ -1,0 +1,11 @@
+{
+  "feat": "FEAT-013",
+  "branch": "feat/filament-admin",
+  "repo": "cbook",
+  "status": "done",
+  "adr": "ADR-006",
+  "commit": "6ed5bc1",
+  "desc": "Filament 5 админка /admin: is_admin (+verified), RecipeResource (CRUD через Tasks) + UserResource (read-only), супер-доступ RecipePolicy::before, decision-ADR-011",
+  "created": "2026-08-05T09:08:05Z",
+  "updated": "2026-08-05T09:08:05Z"
+}
