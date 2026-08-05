@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-03T13:19:00Z",
+  "updated": "2026-08-05T09:09:23Z",
   "repos": {
     "cbook": {
       "type": "bare",
@@ -7,17 +7,7 @@
       "base_local": "6ed5bc1",
       "base_origin": "6ed5bc1",
       "behind": 0,
-      "tasks": {
-        "filament-admin": {
-          "branch": "feat/filament-admin",
-          "head": "6ed5bc1",
-          "feat": "FEAT-013",
-          "ahead": 0,
-          "behind": 0,
-          "delivered": false,
-          "merged": true
-        }
-      }
+      "tasks": {}
     }
   }
 }
