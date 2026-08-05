@@ -23,8 +23,7 @@ cd cbook
 Пока нет папки `vendor/`, команда `sail` недоступна, поэтому первый `composer install` делаем через одноразовый docker-образ:
 
 ```bash
-docker run --rm -v "$(pwd)":/var/www/html -w /var/www/html \
-  laravelsail/php84-composer:latest composer install --ignore-platform-reqs
+docker run --rm -v "$(pwd)":/var/www/html -w /var/www/html laravelsail/php84-composer:latest composer install --ignore-platform-reqs
 ```
 
 ### Шаг 2. Создать .env
@@ -45,8 +44,7 @@ WWWGROUP=20
 ### Шаг 3. Сгенерировать ключ приложения
 
 ```bash
-docker run --rm -v "$(pwd)":/var/www/html -w /var/www/html \
-  laravelsail/php84-composer:latest php artisan key:generate
+docker run --rm -v "$(pwd)":/var/www/html -w /var/www/html laravelsail/php84-composer:latest php artisan key:generate
 ```
 
 ### Шаг 4. Поднять контейнеры
@@ -79,6 +77,20 @@ pnpm build
 - Приложение: http://localhost
 - Админка Filament: http://localhost/admin
 - Почтовый ящик Mailpit: http://localhost:8025
+
+### Шаг 8. Завести администратора
+
+В админ-панель (`/admin`) пускают только пользователей с флагом `is_admin` **и** подтверждённой почтой (`User::canAccessPanel()`). Отдельной команды «создать админа» нет — права выдаются существующему пользователю:
+
+1. Зарегистрироваться на сайте: http://localhost/register
+2. Подтвердить почту: письмо со ссылкой никуда не уходит, оно перехватывается Mailpit — открыть http://localhost:8025, найти письмо и кликнуть ссылку подтверждения.
+3. Выдать права администратора:
+
+```bash
+./vendor/bin/sail artisan app:grant-admin <email>
+```
+
+После этого http://localhost/admin открывается под этим пользователем.
 
 ## 3. Ежедневный запуск (стенд уже развёрнут)
 
@@ -128,6 +140,7 @@ pnpm dev            # если нужен фронт в dev-режиме
 
 ## 6. Если что-то не работает
 
+- **`/admin` отдаёт 403 Forbidden** — вы залогинены пользователем без прав админа или с неподтверждённой почтой. Подтвердить почту через Mailpit и выдать права: `sail artisan app:grant-admin <email>` (шаг 8). Если вы вообще не залогинены, будет не 403, а редирект на `/admin/login`.
 - **Страница отдаёт 500 `ViteManifestNotFoundException`** — не собран фронт: запустить `pnpm dev` или `pnpm build` (шаг 6).
 - **Порт занят при `sail up`** — посмотреть, кто держит: `docker ps` (возможно, запущен стенд задачи с теми же портами) или `lsof -i :<порт>`.
 - **Контейнер mysql не переходит в healthy** — подождать 20–30 секунд после первого запуска (инициализация БД); если не помогло — `./vendor/bin/sail logs mysql`.
